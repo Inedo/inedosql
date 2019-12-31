@@ -1,0 +1,304 @@
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.IO.Compression;
+using System.Linq;
+using System.Text;
+using Inedo.DbUpdater.SqlServer;
+
+namespace Inedo.DbUpdater
+{
+    public static class Program
+    {
+        public static int Main(string[] args)
+        {
+            try
+            {
+                return Run(new ArgList(args));
+            }
+            catch (InedoSqlException ex)
+            {
+                Console.Error.WriteLine(ex.Message);
+                if (ex.WriteUsage)
+                    Usage();
+
+                return ex.ExitCode;
+            }
+        }
+
+        private static int Run(ArgList args)
+        {
+            if (args.Command == null)
+            {
+                Usage();
+                return 1;
+            }
+
+            return args.Command switch
+            {
+                "update" => Update(args.TryGetPositional(0), GetConnectionString(args), args.Named.ContainsKey("force")),
+                "errors" => ListErrors(args.Named.ContainsKey("all"), GetConnectionString(args)),
+                "error" => ShowErrorDetails(args.TryGetPositional(0), GetConnectionString(args), false),
+                "script" => ShowErrorDetails(args.TryGetPositional(0), GetConnectionString(args), true),
+                "resolve-error" => resolveErrors(),
+                "pack" => Pack(args.TryGetPositional(0), args.TryGetPositional(1)),
+                _ => throw new InedoSqlException("Invalid command: " + args.Command, true)
+            };
+
+            // This is a little more complicated than the other commands, so handle abstraction here
+            int resolveErrors()
+            {
+                if (args.Named.ContainsKey("all") && args.Positional.Count > 0)
+                    throw new InedoSqlException("--all cannot be specified with a script GUID.");
+
+                var cs = GetConnectionString(args);
+                args.Named.TryGetValue("comment", out var comment);
+
+                if (args.Named.ContainsKey("all"))
+                    return ResolveAllErrors(cs, comment);
+                else
+                    return ResolveError(args.Positional[0], cs, comment);
+            }
+        }
+
+        private static int Update(string scriptPath, string connectionString, bool force)
+        {
+            IReadOnlyCollection<Script> sqlScripts;
+
+            if (string.IsNullOrEmpty(scriptPath))
+            {
+                if (!EmbeddedScripts.Available)
+                    throw new InedoSqlException("Missing required argument <script-path>");
+
+                sqlScripts = EmbeddedScripts.All;
+            }
+            else
+            {
+                if (EmbeddedScripts.Available)
+                    throw new InedoSqlException("<script-path> is invalid when scripts are embedded.");
+
+                if (Directory.Exists(scriptPath))
+                {
+                    var fileScripts = Script.GetScriptFiles(scriptPath);
+                    fileScripts.Sort();
+                    sqlScripts = fileScripts.AsReadOnly();
+                }
+                else
+                {
+                    Console.Error.WriteLine($"Script path \"{scriptPath}\" not found.");
+                    return -1;
+                }
+            }
+
+            using (var db = new SqlServerDatabaseConnection(connectionString))
+            {
+                ChangeScriptState state;
+                try
+                {
+                    state = db.GetState();
+                    if (!state.IsInitialized)
+                    {
+                        Console.WriteLine("Database is not initialized; initializing...");
+                        db.InitializeDatabase();
+                        Console.WriteLine("Database initialized.");
+
+                        state = db.GetState(); // refresh state
+                    }
+                    else if (state.ChangeScripterVersion == 1)
+                    {
+                        Console.WriteLine("Database uses old change script schema; upgrading...");
+
+                        var lookup = new SortedList<int, Guid>(sqlScripts.Count);
+                        foreach (var script in sqlScripts)
+                        {
+                            if (script.Id.HasValue)
+                            {
+                                var id = script.Id.GetValueOrDefault();
+                                if (id.LegacyId == null)
+                                {
+                                    Console.WriteLine($"Script {script.FileName} is missing a legacy ID.");
+                                    continue;
+                                }
+
+                                lookup[id.LegacyId.Value] = id.Guid;
+                            }
+                        }
+
+                        db.UpgradeSchema(lookup);
+                        Console.WriteLine("Schema upgraded.");
+
+                        state = db.GetState(); // refresh state
+                    }
+                }
+                catch (NotSupportedException ex)
+                {
+                    throw new InedoSqlException(ex.Message);
+                }
+
+                if (!force && state.Scripts.Any(s => !s.SuccessfullyExecuted && !s.ErrorResolvedDate.HasValue))
+                {
+                    Console.Error.WriteLine("Scripts not executed; at least one script has unresolved errors.");
+                    Console.Error.WriteLine("Use the \"errors\" command to view unresolved errors, or use the --force argument to run anyway.");
+                    return -1;
+                }
+
+                if (!db.ExecuteScripts(sqlScripts, state))
+                    return -1;
+
+                if (db.ErrorLogged)
+                    return -1;
+            }
+
+            return 0;
+        }
+        private static int ListErrors(bool all, string connectionString)
+        {
+            using var db = new SqlServerDatabaseConnection(connectionString);
+            var state = db.GetState();
+            if (!state.IsInitialized)
+                throw new InedoSqlException("Database has not been initialized.");
+
+            var errors = state.Scripts.Where(s => !s.SuccessfullyExecuted);
+            if (!all)
+                errors = errors.Where(s => !s.ErrorResolvedDate.HasValue);
+
+            foreach (var script in errors.OrderByDescending(e => e.Id.ScriptId))
+                Console.WriteLine($"{script.Id} {script.Name}");
+
+            return 0;
+        }
+        private static int ShowErrorDetails(string nameOrId, string connectionString, bool writeScript)
+        {
+            using var db = new SqlServerDatabaseConnection(connectionString);
+            var state = db.GetState();
+            if (!state.IsInitialized)
+                throw new InedoSqlException("Database has not been initialized.");
+
+            var script = state.GetExecutionRecord(nameOrId);
+            if (script == null)
+                throw new InedoSqlException($"Tracked script {nameOrId} has not been executed against this database.");
+
+            Console.WriteLine("GUID: " + script.Id);
+            Console.WriteLine("Name: " + script.Name);
+            Console.WriteLine("Executed: " + script.ExecutionDate.ToLocalTime());
+            Console.WriteLine("Resolved: " + (script.ErrorResolvedDate?.ToLocalTime().ToString() ?? "-"));
+            Console.WriteLine();
+            Console.WriteLine("Resolution:");
+            Console.WriteLine(script.ErrorResolvedText ?? "-");
+            Console.WriteLine();
+            Console.WriteLine("Error:");
+            Console.WriteLine(script.ErrorText ?? "-");
+            Console.WriteLine();
+
+            if (writeScript)
+            {
+                Console.WriteLine("Script:");
+                Console.WriteLine(script.ScriptText ?? "-");
+                Console.WriteLine();
+            }
+
+            return 0;
+        }
+        private static int ResolveError(string scriptId, string connectionString, string comment)
+        {
+            if (!Guid.TryParse(scriptId, out var guid))
+                throw new InedoSqlException("Invalid script GUID: " + scriptId);
+
+            using var db = new SqlServerDatabaseConnection(connectionString);
+            var state = db.GetState();
+            if (!state.IsInitialized)
+                throw new InedoSqlException("Database has not been initialized.");
+
+            var script = state.Scripts.FirstOrDefault(s => s.Id.Guid == guid);
+            if (script == null)
+                throw new InedoSqlException($"Tracked script {scriptId} has not been executed against this database.");
+
+            if (script.SuccessfullyExecuted)
+            {
+                Console.WriteLine($"[warn] Tracked script {scriptId} executed with no errors; nothing to resolve.");
+                return 0;
+            }
+
+            db.ResolveError(guid, comment);
+            return 0;
+        }
+        private static int ResolveAllErrors(string connectionString, string comment)
+        {
+            using var db = new SqlServerDatabaseConnection(connectionString);
+            var state = db.GetState();
+            if (!state.IsInitialized)
+                throw new InedoSqlException("Database has not been initialized.");
+
+            db.ResolveAllErrors(comment);
+            return 0;
+        }
+        private static int Pack(string scriptPath, string outputFileName)
+        {
+            if (string.IsNullOrWhiteSpace(scriptPath))
+                throw new InedoSqlException("Missing <script-path> argument.");
+            if (string.IsNullOrWhiteSpace(outputFileName))
+                throw new InedoSqlException("Missing <output-file> argument.");
+
+            List<Script> sqlScripts;
+
+            if (Directory.Exists(scriptPath))
+            {
+                sqlScripts = Script.GetScriptFiles(scriptPath);
+            }
+            else
+            {
+                Console.Error.WriteLine($"Script path \"{scriptPath}\" not found.");
+                return -1;
+            }
+
+            sqlScripts.Sort();
+
+            using var zipStream = new MemoryStream();
+
+            using var outStream = File.Create(outputFileName);
+            using (var thisStream = File.OpenRead(typeof(Program).Assembly.Location))
+            {
+                thisStream.CopyTo(outStream);
+            }
+
+            var encoding = new UTF8Encoding(false);
+
+            using (var zip = new ZipArchive(zipStream, ZipArchiveMode.Create, true))
+            {
+                foreach (var script in sqlScripts)
+                {
+                    Console.WriteLine($"Adding {script.FileName}...");
+                    var entry = zip.CreateEntry(script.FileName, CompressionLevel.Optimal);
+                    using var entryWriter = new StreamWriter(entry.Open(), encoding);
+                    entryWriter.Write(script.ScriptText);
+                }
+            }
+
+            zipStream.Position = 0;
+            zipStream.CopyTo(outStream);
+            return 0;
+        }
+
+        private static void Usage()
+        {
+            Console.WriteLine();
+            Console.WriteLine("Usage: inedosql <command> [arguments...]");
+            Console.WriteLine("Commands:");
+            Console.WriteLine(" update <script-path> [--connection-string=<connection-string>] [--force]");
+            Console.WriteLine(" errors [--connection-string=<connection-string>] [--all]");
+            Console.WriteLine(" error <script-guid-or-name> [--connection-string=<connection-string>]");
+            Console.WriteLine(" script <script-guid-or-name> [--connection-string=<connection-string>]");
+            Console.WriteLine(" resolve-error [<script-guid>] [--connection-string=<connection-string>] [--all] [--comment=<comment>]");
+            Console.WriteLine(" pack <script-path> <output-file>");
+        }
+
+        private static string GetConnectionString(ArgList args)
+        {
+            if (args.Named.TryGetValue("connection-string", out var cs) && !string.IsNullOrWhiteSpace(cs))
+                return cs;
+
+            return Environment.GetEnvironmentVariable("inedosql_cs")
+                ?? throw new InedoSqlException("Connection string is required. Argument --connection-string=<value> is missing and inedosql_cs environment variable is not set.");
+        }
+    }
+}
