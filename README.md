@@ -10,6 +10,40 @@ inedosql is a simple command-line tool used to consistently and safely update SQ
 This utility is used by Inedo's products to deliver database upgrades, but all are welcome to
 use and/or contribute to it.
 
+## Tracked and Untracked SQL Scripts
+
+inedosql is intended for use with lexically-ordered scripts in `.sql` files. When using the `update` command
+(see below), it will iterate all `.sql` files in a directory recursively, possibly executing it against
+the target database depending on whether it is a tracked or untracked script.
+
+A **tracked** script, is a `.sql` script with a special comment header on the first line using the following format:
+
+    --AH:ScriptId=<unique-guid>[;ExecutionMode=<Once|OnChange|Always>]
+
+Each tracked script's GUID uniquely identifies it and allows its executions against a target database to
+be recorded. This allows one-time database schema changes to be executed once and only once against a database.
+The `ExecutionMode` value is optional, and may be one of:
+ - **Once**: The script is only ever run once. This is the default behavior if `ExecutionMode` is not specified.
+ - **OnChange**: The script is run only when it has changed compared to the last time it was executed against the target database.
+ - **Always**: The script is run every time like an untracked script, but the success/failure of its last run is retained because it is tracked.
+
+An **untracked** script is simple a plain `.sql` script without the header. These scripts are run every time,
+and nothing is persisted about each run.
+
+### Examples of Tracked Scripts
+
+This uses the implicit `ExecutionMode=Once` to ensure that the `[MyTable]` table
+is only created one time:
+
+    --AH:ScriptId=E632420E-0D90-46F7-A23E-1F374786CABD
+    CREATE TABLE [MyTable] ([MyColumn] INT)
+
+An example of a "cleanup script" to remove old views. It can be run multiple times, but doesn't need to be
+re-run unless it's been modified, so it uses `ExecutionMode=OnChange`:    
+
+    --AH:ScriptId=5428C9CD-59DD-40B7-BF39-87259CDF7653;ExecutionMode=OnChange
+    IF OBJECT_ID('MyOldView') IS NOT NULL DROP VIEW [MyOldView]
+
 ## Command Line Reference
 
     inedosql <command> [--connection-string=<connection-string>] [options...]
