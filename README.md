@@ -1,14 +1,12 @@
 # inedosql
 
-inedosql is a simple command-line tool used to consistently and safely update SQL database schemas. It provides:
+## Using inedosql
 
- - change tracking
- - run history
- - safety, by preventing change scripts from being rerun, and preventing additional scripts from running after a failure
- - easy redistribution
-
-This utility is used by Inedo's products to deliver database upgrades, but all are welcome to
-use and/or contribute to it.
+ - inedosql is used primarily to execute `.sql` script files against a SQL Server database
+ - this is done with the `update` command (see "Update")
+ - these sql files can be executed from disk, or an embedded/attached zip file (see "Embedding scripts for distribution")
+ - scripts are executed in lexical order (i.e. alphabetically), which means you can use directory structures and prefixes to properly order scripts (see "Example Scripts Layout")
+ - you can mark a script as a "tracked" script, which means it won't always be executed
 
 ## Tracked and Untracked SQL Scripts
 
@@ -43,6 +41,33 @@ re-run unless it's been modified, so it uses `ExecutionMode=OnChange`:
 
     --AH:ScriptId=5428C9CD-59DD-40B7-BF39-87259CDF7653;ExecutionMode=OnChange
     IF OBJECT_ID('MyOldView') IS NOT NULL DROP VIEW [MyOldView]
+
+## Example Scripts Layout
+
+The below example shows how you can use both directories and numeric prefixes ensure proper execution order.
+Procedures can use Views, which in turn can use functions, but usually not the other way around. Since a handful
+database objects depend on other objects, those can prefixed with "2." instead of "1."
+
+    1-SCHEMA\
+        001.001\
+            1.initial-schema.sql
+        001.002\
+            1.data-patch.orders.sql
+        002.000\
+            1.fix-orders-table.sql
+    2-OBJECTS\
+       1-TRIGGERS\
+            1.ValidateOrders.sql
+       2-FUNCTIONS\
+            1.FormatOrderNumber.sql
+       3-VIEWS\
+            1.OrdersWithTotals.sql
+            1.SalesReport.sql
+            2.OrdersPastDue.sql
+       4-PROCS\
+            1.AddItemToOrder.sql
+            1.ValidateOrder.sql
+            2.ProcessOrder.sql
 
 ## Command Line Reference
 
@@ -103,3 +128,12 @@ If `--all` is specified, this command applies to all unresolved tracked script e
 
 `<comment>` is optional, and if specified, provides a short comment to be recorded with the
 resolution for the script.
+
+## Embedding scripts for distribution
+
+If you need to distribute database scripts using this tool in a single executable file, you can zip
+all of your .sql scripts and then append the zip file onto `inedosql.exe`:
+
+    copy /b inedosql.exe+myscripts.zip MyScripts.exe
+
+To prevent confusion, you should probably not name the distribution exe "inedosql.exe."
