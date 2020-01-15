@@ -10,7 +10,7 @@ namespace Inedo.DbUpdater.SqlServer
         private static readonly Lazy<string> recordExecution = new Lazy<string>(() => Read("RecordExecution.sql"));
         private static readonly Lazy<string> updateExecution = new Lazy<string>(() => Read("UpdateExecution.sql"));
         private static readonly Lazy<string> readV1Scripts = new Lazy<string>(() => Read("ReadV1Scripts.sql"));
-        private static readonly Lazy<string> migrateV1toV2 = new Lazy<string>(() => Read("MigrateV1toV2.sql"));
+        private static readonly Lazy<string> migrateV2toV3 = new Lazy<string>(() => Read("MigrateV2toV3.sql"));
         private static readonly Lazy<string> resolveError = new Lazy<string>(() => Read("ResolveError.sql"));
         private static readonly Lazy<string> resolveAllErrors = new Lazy<string>(() => Read("ResolveAllErrors.sql"));
 
@@ -18,7 +18,7 @@ namespace Inedo.DbUpdater.SqlServer
         public static string RecordExecution => recordExecution.Value;
         public static string UpdateExecution => updateExecution.Value;
         public static string ReadV1Scripts => readV1Scripts.Value;
-        public static string MigrateV1toV2 => migrateV1toV2.Value;
+        public static string MigrateV2toV3 => migrateV2toV3.Value;
         public static string ResolveError => resolveError.Value;
         public static string ResolveAllErrors => resolveAllErrors.Value;
 

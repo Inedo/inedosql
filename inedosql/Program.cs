@@ -129,6 +129,13 @@ namespace Inedo.DbUpdater
 
                         state = db.GetState(); // refresh state
                     }
+                    else if (state.ChangeScripterVersion == 2)
+                    {
+                        Console.WriteLine("Database uses v2 change script schema; upgrading...");
+
+                        db.UpgradeSchema(null);
+                        state = db.GetState(); // refresh state
+                    }
                 }
                 catch (NotSupportedException ex)
                 {

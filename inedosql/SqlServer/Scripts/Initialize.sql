@@ -11,7 +11,7 @@
     [ErrorResolved_Date] DATETIME NULL
  
     CONSTRAINT [PK__InedoDb_DbSchemaChanges]
-        PRIMARY KEY CLUSTERED ([Script_Guid]),
+        PRIMARY KEY CLUSTERED ([Script_Id]),
 
     CONSTRAINT [UQ__InedoDb_DbSchemaChanges]
         UNIQUE ([Script_Guid]),

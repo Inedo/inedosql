@@ -71,7 +71,7 @@ namespace Inedo.DbUpdater.SqlServer
             }
             else if (state.ChangeScripterVersion == 2)
             {
-                this.ExecuteNonQuery(Scripts.MigrateV1toV2, transaction);
+                this.ExecuteNonQuery(Scripts.MigrateV2toV3, transaction);
             }
 
             transaction.Commit();
