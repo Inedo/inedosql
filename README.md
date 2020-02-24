@@ -1,5 +1,7 @@
 # inedosql
 
+[![Build status](https://buildmaster.inedo.com/api/ci-badges/image?API_Key=badges&$ApplicationId=64)](https://buildmaster.inedo.com/api/ci-badges/link?API_Key=badges&$ApplicationId=64)
+
 ## Using inedosql
 
  - inedosql is used primarily to execute `.sql` script files against a SQL Server database
