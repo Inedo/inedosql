@@ -155,7 +155,7 @@ namespace Inedo.DbUpdater.SqlServer
                 Scripts.ResolveError,
                 null,
                 new SqlParameter("Script_Guid", scriptId),
-                new SqlParameter("ErrorResolved_Text", SqlDbType.NVarChar, -1) { Value = comment }
+                new SqlParameter("ErrorResolved_Text", SqlDbType.NVarChar, -1) { Value = (object)comment ?? DBNull.Value }
             );
         }
         public void ResolveAllErrors(string comment)
@@ -163,7 +163,7 @@ namespace Inedo.DbUpdater.SqlServer
             this.ExecuteNonQuery(
                 Scripts.ResolveAllErrors,
                 null,
-                new SqlParameter("ErrorResolved_Text", SqlDbType.NVarChar, -1) { Value = comment }
+                new SqlParameter("ErrorResolved_Text", SqlDbType.NVarChar, -1) { Value = (object)comment ?? DBNull.Value }
             );
         }
 
