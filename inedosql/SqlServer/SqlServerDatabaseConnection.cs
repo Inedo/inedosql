@@ -66,6 +66,16 @@ namespace Inedo.DbUpdater.SqlServer
                             new SqlParameter("Success_Indicator", SqlDbType.Char, 1) { Value = script.SuccessfullyExecuted ? "Y" : "N" },
                             new SqlParameter("Error_Text", SqlDbType.NVarChar, -1) { Value = null }
                         );
+
+                        if (!script.SuccessfullyExecuted)
+                        {
+                            this.ExecuteNonQuery(
+                                Scripts.ResolveError,
+                                transaction,
+                                new SqlParameter("Script_Guid", guid),
+                                new SqlParameter("ErrorResolved_Text", SqlDbType.NVarChar, -1) { Value = "Migrated to dbschema v3." }
+                            );
+                        }
                     }
                 }
             }
