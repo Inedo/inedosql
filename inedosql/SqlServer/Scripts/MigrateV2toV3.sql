@@ -4,7 +4,8 @@
     [Script_Name],
     [Executed_Date],
     [Success_Indicator],
-    [ErrorResolved_Text]
+    [ErrorResolved_Text],
+    [ErrorResolved_Date]
 )
 SELECT [Script_Guid],
        [Script_Name],
