@@ -22,6 +22,7 @@ A **tracked** script, is a `.sql` script with a special comment header on the fi
 
 Each tracked script's GUID uniquely identifies it and allows its executions against a target database to
 be recorded. This allows one-time database schema changes to be executed once and only once against a database.
+
 The `ExecutionMode` value is optional, and may be one of:
  - **Once**: The script is only ever run once. This is the default behavior if `ExecutionMode` is not specified.
  - **OnChange**: The script is run only when it has changed compared to the last time it was executed against the target database.
@@ -43,6 +44,10 @@ re-run unless it's been modified, so it uses `ExecutionMode=OnChange`:
 
     --AH:ScriptId=5428C9CD-59DD-40B7-BF39-87259CDF7653;ExecutionMode=OnChange
     IF OBJECT_ID('MyOldView') IS NOT NULL DROP VIEW [MyOldView]
+
+### Tracked Script Metadata Table
+
+Information about tracked scripts are stored in the database itself, in a table called `__InedoDb_DbSchemaChanges`. See [Initialize.sql](https://github.com/Inedo/inedosql/blob/master/inedosql/SqlServer/Scripts/Initialize.sql) for the structure.
 
 ## Example Scripts Layout
 
