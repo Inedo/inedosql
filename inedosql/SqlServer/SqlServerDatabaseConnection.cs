@@ -17,6 +17,7 @@ namespace Inedo.DbUpdater.SqlServer
     internal sealed class SqlServerDatabaseConnection : IDisposable
     {
         private SqlConnection connection;
+        private SqlCommand command;
         private bool disposed;
 
         public SqlServerDatabaseConnection(string connectionString) => this.ConnectionString = connectionString;
@@ -204,6 +205,7 @@ namespace Inedo.DbUpdater.SqlServer
         {
             if (disposing && !this.disposed)
             {
+                this.command?.Dispose();
                 this.connection?.Dispose();
                 this.disposed = true;
             }
@@ -283,16 +285,18 @@ namespace Inedo.DbUpdater.SqlServer
         
         private void ExecuteNonQuery(string query, SqlTransaction transaction, params SqlParameter[] args)
         {
-            using var command = new SqlCommand(query, this.GetConnection(), transaction);
-            command.Parameters.AddRange(args);
+            var command = this.GetCommand(query, transaction, args);
             command.ExecuteNonQuery();
         }
         private void ExecuteQueryWithSplitter(string query)
         {
             foreach (var sql in SqlSplitter.SplitSqlScript(query))
             {
-                using var command = new SqlCommand(sql, this.GetConnection()) { CommandTimeout = 0 };
-                command.ExecuteNonQuery();
+                if (!string.IsNullOrWhiteSpace(sql))
+                {
+                    var command = this.GetCommand(sql);
+                    command.ExecuteNonQuery();
+                }
             }
         }
         private List<TResult> ExecuteTable<TResult>(string query, Func<SqlDataReader, TResult> adapter, params SqlParameter[] args) => this.ExecuteTable(query, adapter, transaction: null, args);
@@ -322,6 +326,27 @@ namespace Inedo.DbUpdater.SqlServer
             }
 
             return this.connection;
+        }
+        private SqlCommand GetCommand(string query, SqlTransaction transaction = null, SqlParameter[] args = null)
+        {
+            if (this.command == null)
+            {
+                this.command = new SqlCommand(query, this.GetConnection(), transaction)
+                {
+                    CommandTimeout = 0
+                };
+            }
+            else
+            {
+                this.command.Parameters.Clear();
+                this.command.CommandText = query;
+                this.command.Transaction = transaction;
+            }
+
+            if (args?.Length > 0)
+                this.command.Parameters.AddRange(args);
+
+            return this.command;
         }
 
         private void Connection_InfoMessage(object sender, SqlInfoMessageEventArgs e)

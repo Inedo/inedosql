@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace Inedo.DbUpdater
@@ -99,6 +101,18 @@ namespace Inedo.DbUpdater
             return Directory.EnumerateFiles(scriptPath, "*.sql", SearchOption.AllDirectories)
                 .Select(s => new Script(s.Substring(scriptPath.Length).TrimStart('/', '\\'), File.ReadAllText(s)))
                 .ToList();
+        }
+        public static List<Script> GetScriptZipEntries(ZipArchive zip)
+        {
+            var scripts = new List<Script>(zip.Entries.Count);
+
+            foreach (var entry in zip.Entries.Where(e => e.FullName.EndsWith(".sql", StringComparison.OrdinalIgnoreCase)))
+            {
+                using var entryReader = new StreamReader(entry.Open(), Encoding.UTF8);
+                scripts.Add(new Script(entry.FullName, entryReader.ReadToEnd()));
+            }
+
+            return scripts;
         }
     }
 }

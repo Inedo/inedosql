@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
-using System.Linq;
-using System.Text;
 
 namespace Inedo.DbUpdater
 {
@@ -20,15 +18,7 @@ namespace Inedo.DbUpdater
             try
             {
                 using var zip = new ZipArchive(thisStream, ZipArchiveMode.Read);
-
-                var scripts = new List<Script>(zip.Entries.Count);
-
-                foreach (var entry in zip.Entries.Where(e => e.FullName.EndsWith(".sql", StringComparison.OrdinalIgnoreCase)))
-                {
-                    using var entryReader = new StreamReader(entry.Open(), Encoding.UTF8);
-                    scripts.Add(new Script(entry.FullName, entryReader.ReadToEnd()));
-                }
-
+                var scripts = Script.GetScriptZipEntries(zip);
                 scripts.Sort();
                 return scripts.AsReadOnly();
             }
