@@ -264,7 +264,14 @@ namespace Inedo.DbUpdater.SqlServer
             catch (SqlException ex)
             {
                 foreach (SqlError error in ex.Errors)
+                {
                     errors.Add(error.Message);
+                
+                    if (error.Class > 10)
+                        this.LogError(error.Message);
+                    else
+                        this.LogInformation(error.Message);
+                 }   
 
                 success = false;
             }
