@@ -7,28 +7,13 @@
     <RootNamespace>Inedo.DbUpdater</RootNamespace>
     <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
-  <ItemGroup>
-    <None Remove="SqlServer\Initialize.sql" />
-    <None Remove="SqlServer\RecordExecution.sql" />
-    <None Remove="SqlServer\Scripts\MigrateV2toV3.sql" />
-    <None Remove="SqlServer\Scripts\ReadV1Scripts.sql" />
-    <None Remove="SqlServer\Scripts\ResolveAllErrors.sql" />
-    <None Remove="SqlServer\Scripts\ResolveError.sql" />
-    <None Remove="SqlServer\Scripts\UpdateExecution.sql" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="SqlServer\Scripts\ReadV1Scripts.sql" />
-    <EmbeddedResource Include="SqlServer\Scripts\MigrateV2toV3.sql" />
-    <EmbeddedResource Include="SqlServer\Scripts\ResolveAllErrors.sql" />
-    <EmbeddedResource Include="SqlServer\Scripts\ResolveError.sql" />
-    <EmbeddedResource Include="SqlServer\Scripts\UpdateExecution.sql" />
-    <EmbeddedResource Include="SqlServer\Scripts\RecordExecution.sql" />
-    <EmbeddedResource Include="SqlServer\Scripts\Initialize.sql" />
-  </ItemGroup>
   <ItemGroup Condition="$(TargetFramework)=='net452'">
     <Reference Include="System.IO.Compression" />
   </ItemGroup>
   <ItemGroup Condition="$(TargetFramework)=='netcoreapp3.1'">
     <PackageReference Include="Microsoft.Data.SqlClient" Version="1.1.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="SqlServer\Scripts\*.sql" />
   </ItemGroup>
 </Project>
