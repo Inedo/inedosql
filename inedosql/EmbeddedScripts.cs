@@ -14,18 +14,23 @@ namespace Inedo.DbUpdater
 
         private static IReadOnlyCollection<Script> ReadScripts()
         {
-            using var thisStream = File.OpenRead(typeof(EmbeddedScripts).Assembly.Location);
-            try
+            var path = typeof(EmbeddedScripts).Assembly.Location;
+            if (!string.IsNullOrEmpty(path))
             {
-                using var zip = new ZipArchive(thisStream, ZipArchiveMode.Read);
-                var scripts = Script.GetScriptZipEntries(zip);
-                scripts.Sort();
-                return scripts.AsReadOnly();
+                using var thisStream = File.OpenRead(path);
+                try
+                {
+                    using var zip = new ZipArchive(thisStream, ZipArchiveMode.Read);
+                    var scripts = Script.GetScriptZipEntries(zip);
+                    scripts.Sort();
+                    return scripts.AsReadOnly();
+                }
+                catch
+                {
+                }
             }
-            catch
-            {
-                return null;
-            }
+
+            return null;
         }
     }
 }

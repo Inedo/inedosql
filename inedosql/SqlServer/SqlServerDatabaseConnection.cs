@@ -6,9 +6,7 @@ using System.Text;
 
 #if NET452
 using System.Data.SqlClient;
-#endif
-
-#if NETCOREAPP3_1
+#else
 using Microsoft.Data.SqlClient;
 #endif
 

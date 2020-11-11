@@ -1,16 +1,16 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>exe</OutputType>
-    <TargetFrameworks>net452;netcoreapp3.1</TargetFrameworks>
+    <TargetFrameworks>net452;net5.0</TargetFrameworks>
     <LangVersion>latest</LangVersion>
     <Prefer32Bit>false</Prefer32Bit>
     <RootNamespace>Inedo.DbUpdater</RootNamespace>
-    <PlatformTarget>AnyCPU</PlatformTarget>
+    <NoWarn>IL3000</NoWarn>
   </PropertyGroup>
   <ItemGroup Condition="$(TargetFramework)=='net452'">
     <Reference Include="System.IO.Compression" />
   </ItemGroup>
-  <ItemGroup Condition="$(TargetFramework)=='netcoreapp3.1'">
+  <ItemGroup Condition="$(TargetFramework)=='net5.0'">
     <PackageReference Include="Microsoft.Data.SqlClient" Version="2.0.1" />
   </ItemGroup>
   <ItemGroup>
