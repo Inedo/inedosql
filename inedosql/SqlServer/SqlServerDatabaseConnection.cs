@@ -178,6 +178,7 @@ namespace Inedo.DbUpdater.SqlServer
 
         public bool ExecuteScripts(IEnumerable<Script> scripts, ChangeScriptState state)
         {
+            // Cannot wrap this in a transaction because ALTER DATABASE statements are not allowed within a multi-statement transaction
             var lookup = state.Scripts.Where(s => s.Id?.Guid.HasValue == true).ToDictionary(s => s.Id.Guid.GetValueOrDefault());
 
             foreach (var script in scripts)
