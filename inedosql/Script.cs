@@ -74,6 +74,7 @@ namespace Inedo.DbUpdater
                 Guid? guid = null;
                 int? legacyId = null;
                 var mode = ExecutionMode.Once;
+                var tran = true;
 
                 foreach (var p in parts)
                 {
@@ -81,13 +82,15 @@ namespace Inedo.DbUpdater
                         guid ??= g;
                     else if (p.StartsWith("ExecutionMode=", StringComparison.OrdinalIgnoreCase) && Enum.TryParse(p.Substring("ExecutionMode=".Length), out ExecutionMode m))
                         mode = m;
+                    else if (p.StartsWith("UseTransaction=", StringComparison.OrdinalIgnoreCase) && bool.TryParse(p.Substring("UseTransaction=".Length), out var t))
+                        tran = t;
                     else if (int.TryParse(p, out int i))
                         legacyId = i;
                 }
 
                 if (guid.HasValue)
                 {
-                    id = new CanonicalScriptId(guid.GetValueOrDefault(), legacyId, mode);
+                    id = new CanonicalScriptId(guid.GetValueOrDefault(), legacyId, mode, tran);
                     return true;
                 }
             }

@@ -178,7 +178,6 @@ namespace Inedo.DbUpdater.SqlServer
 
         public bool ExecuteScripts(IEnumerable<Script> scripts, ChangeScriptState state)
         {
-            // Cannot wrap this in a transaction because ALTER DATABASE statements are not allowed within a multi-statement transaction
             var lookup = state.Scripts.Where(s => s.Id?.Guid.HasValue == true).ToDictionary(s => s.Id.Guid.GetValueOrDefault());
 
             foreach (var script in scripts)
@@ -254,11 +253,16 @@ namespace Inedo.DbUpdater.SqlServer
             var errors = new List<string>();
 
             bool success;
+            SqlTransaction transaction = null;
             try
             {
-                this.ExecuteQueryWithSplitter(script.ScriptText);
+                if (scriptId.UseTransaction)
+                    transaction = this.GetConnection().BeginTransaction();
+
+                this.ExecuteQueryWithSplitter(script.ScriptText, transaction);
                 success = true;
                 this.LogInformation(script.FileName + " executed successfully.");
+                transaction?.Commit();
             }
             catch (SqlException ex)
             {
@@ -270,9 +274,12 @@ namespace Inedo.DbUpdater.SqlServer
                         this.LogError(error.Message);
                     else
                         this.LogInformation(error.Message);
-                 }   
+                    if (error.Number == 226)
+                        this.LogInformation("This error may be resolved by adding \"UseTransaction=False\" to the script's AH: header statement.");
+                }   
 
                 success = false;
+                transaction?.Rollback();
             }
 
             this.ExecuteNonQuery(
@@ -294,13 +301,13 @@ namespace Inedo.DbUpdater.SqlServer
             var command = this.GetCommand(query, transaction, args);
             command.ExecuteNonQuery();
         }
-        private void ExecuteQueryWithSplitter(string query)
+        private void ExecuteQueryWithSplitter(string query, SqlTransaction transaction = null)
         {
             foreach (var sql in SqlSplitter.SplitSqlScript(query))
             {
                 if (!string.IsNullOrWhiteSpace(sql))
                 {
-                    var command = this.GetCommand(sql);
+                    var command = this.GetCommand(sql, transaction);
                     command.ExecuteNonQuery();
                 }
             }

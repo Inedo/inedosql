@@ -18,7 +18,7 @@ the target database depending on whether it is a tracked or untracked script.
 
 A **tracked** script, is a `.sql` script with a special comment header on the first line using the following format:
 
-    --AH:ScriptId=<unique-guid>[;ExecutionMode=<Once|OnChange|Always>]
+    --AH:ScriptId=<unique-guid>[;ExecutionMode=<Once|OnChange|Always>][;UseTransaction=<True|False>]
 
 Each tracked script's GUID uniquely identifies it and allows its executions against a target database to
 be recorded. This allows one-time database schema changes to be executed once and only once against a database.
@@ -28,6 +28,10 @@ The `ExecutionMode` value is optional, and may be one of:
  - **OnChange**: The script is run only when it has changed compared to the last time it was executed against the target database.
  - **Always**: The script is run every time like an untracked script, but the success/failure of its last run is retained because it is tracked.
 
+The `UseTransaction` value is optional, and may be one of:
+ - **True**: The script is run using a transaction, and will rollback on an error. This is the default behavior if `UseTransaction` is not specified.
+ - **False**: The script will not use a transaction; this may be required for certain scripts, including ALTER DATABASE statements.
+ 
 An **untracked** script is simple a plain `.sql` script without the header. These scripts are run every time,
 and nothing is persisted about each run.
 
