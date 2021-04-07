@@ -7,7 +7,7 @@ namespace Inedo.DbUpdater
 {
     internal static class EmbeddedScripts
     {
-        private static readonly Lazy<IReadOnlyCollection<Script>> scriptsIfAvailable = new Lazy<IReadOnlyCollection<Script>>(ReadScripts);
+        private static readonly Lazy<IReadOnlyCollection<Script>> scriptsIfAvailable = new(ReadScripts);
 
         public static IReadOnlyCollection<Script> All => scriptsIfAvailable.Value;
         public static bool Available => scriptsIfAvailable.Value != null;

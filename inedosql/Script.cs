@@ -10,7 +10,7 @@ namespace Inedo.DbUpdater
 {
     internal sealed class Script : IComparable<Script>, IEquatable<Script>
     {
-        private static readonly Regex ScriptIdRegex = new Regex(@"^--\s*AH:(?<1>.+)\n", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
+        private static readonly Regex ScriptIdRegex = new(@"^--\s*AH:(?<1>.+)\n", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
 
         public Script(string fileName, string scriptText)
         {

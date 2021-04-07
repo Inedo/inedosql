@@ -5,7 +5,7 @@ namespace Inedo.DbUpdater.SqlServer
 {
     internal static class SqlSplitter
     {
-        private static readonly Regex GoRegex = new Regex(@"^\s*GO\s*$", RegexOptions.Compiled | RegexOptions.Multiline | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
+        private static readonly Regex GoRegex = new(@"^\s*GO\s*$", RegexOptions.Compiled | RegexOptions.Multiline | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
 
         /// <summary>
         /// Returns a collection of the SQL scripts in a string separated by canonical GO statements.

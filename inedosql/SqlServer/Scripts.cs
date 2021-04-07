@@ -6,13 +6,13 @@ namespace Inedo.DbUpdater.SqlServer
 {
     internal static class Scripts
     {
-        private static readonly Lazy<string> initialize = new Lazy<string>(() => Read("Initialize.sql"));
-        private static readonly Lazy<string> recordExecution = new Lazy<string>(() => Read("RecordExecution.sql"));
-        private static readonly Lazy<string> updateExecution = new Lazy<string>(() => Read("UpdateExecution.sql"));
-        private static readonly Lazy<string> readV1Scripts = new Lazy<string>(() => Read("ReadV1Scripts.sql"));
-        private static readonly Lazy<string> migrateV2toV3 = new Lazy<string>(() => Read("MigrateV2toV3.sql"));
-        private static readonly Lazy<string> resolveError = new Lazy<string>(() => Read("ResolveError.sql"));
-        private static readonly Lazy<string> resolveAllErrors = new Lazy<string>(() => Read("ResolveAllErrors.sql"));
+        private static readonly Lazy<string> initialize = new(() => Read("Initialize.sql"));
+        private static readonly Lazy<string> recordExecution = new(() => Read("RecordExecution.sql"));
+        private static readonly Lazy<string> updateExecution = new(() => Read("UpdateExecution.sql"));
+        private static readonly Lazy<string> readV1Scripts = new(() => Read("ReadV1Scripts.sql"));
+        private static readonly Lazy<string> migrateV2toV3 = new(() => Read("MigrateV2toV3.sql"));
+        private static readonly Lazy<string> resolveError = new(() => Read("ResolveError.sql"));
+        private static readonly Lazy<string> resolveAllErrors = new(() => Read("ResolveAllErrors.sql"));
 
         public static string Initialize => initialize.Value;
         public static string RecordExecution => recordExecution.Value;
