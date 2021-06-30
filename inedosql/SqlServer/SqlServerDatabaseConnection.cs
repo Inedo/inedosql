@@ -60,10 +60,10 @@ namespace Inedo.DbUpdater.SqlServer
                             transaction,
                             new SqlParameter("Script_Guid", guid),
                             new SqlParameter("Script_Name", SqlDbType.NVarChar, 200) { Value = script.Name },
-                            new SqlParameter("Script_Sql", SqlDbType.VarBinary, -1) { Value = null },
+                            new SqlParameter("Script_Sql", SqlDbType.VarBinary, -1) { Value = DBNull.Value },
                             new SqlParameter("Executed_Date", script.ExecutionDate),
                             new SqlParameter("Success_Indicator", SqlDbType.Char, 1) { Value = script.SuccessfullyExecuted ? "Y" : "N" },
-                            new SqlParameter("Error_Text", SqlDbType.NVarChar, -1) { Value = null }
+                            new SqlParameter("Error_Text", SqlDbType.NVarChar, -1) { Value = DBNull.Value }
                         );
 
                         if (!script.SuccessfullyExecuted)
