@@ -56,6 +56,11 @@ namespace Inedo.DbUpdater
         /// </summary>
         public ReadOnlyCollection<ChangeScriptExecutionRecord> Scripts { get; }
 
+        /// <summary>
+        /// Returns the execution record for the script with the specified name or ID.
+        /// </summary>
+        /// <param name="nameOrId">The name or ID of the script.</param>
+        /// <returns>Execution record for the specified script.</returns>
         public ChangeScriptExecutionRecord GetExecutionRecord(string nameOrId)
         {
             if (Guid.TryParse(nameOrId, out var g))

@@ -20,6 +20,9 @@ namespace Inedo.DbUpdater.SqlServer
 
         public SqlServerDatabaseConnection(string connectionString) => this.ConnectionString = connectionString;
 
+        public event EventHandler<MessageLoggedEventArgs> LogInformationMessage;
+        public event EventHandler<MessageLoggedEventArgs> LogErrorMessage;
+
         public string ConnectionString { get; }
         public bool ErrorLogged { get; private set; }
 
@@ -209,11 +212,11 @@ namespace Inedo.DbUpdater.SqlServer
             }
         }
 
-        private void LogInformation(string s) => Console.WriteLine(s);
+        private void LogInformation(string s) => this.LogInformationMessage?.Invoke(this, new MessageLoggedEventArgs(s));
         private void LogError(string s)
         {
             this.ErrorLogged = true;
-            Console.Error.WriteLine(s);
+            this.LogErrorMessage?.Invoke(this, new MessageLoggedEventArgs(s));
         }
 
         private bool ExecuteTrackedScript(Script script, IReadOnlyDictionary<Guid, ChangeScriptExecutionRecord> currentState)

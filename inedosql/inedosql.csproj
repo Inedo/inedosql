@@ -1,19 +1,19 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <OutputType>exe</OutputType>
-    <TargetFrameworks>net452;net5.0</TargetFrameworks>
-    <LangVersion>latest</LangVersion>
-    <Prefer32Bit>false</Prefer32Bit>
-    <RootNamespace>Inedo.DbUpdater</RootNamespace>
-    <NoWarn>IL3000</NoWarn>
-  </PropertyGroup>
-  <ItemGroup Condition="$(TargetFramework)=='net452'">
-    <Reference Include="System.IO.Compression" />
-  </ItemGroup>
-  <ItemGroup Condition="$(TargetFramework)=='net5.0'">
-    <PackageReference Include="Microsoft.Data.SqlClient" Version="2.1.2" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="SqlServer\Scripts\*.sql" />
-  </ItemGroup>
+	<PropertyGroup>
+		<OutputType>exe</OutputType>
+		<TargetFrameworks>net452;net5.0</TargetFrameworks>
+		<LangVersion>latest</LangVersion>
+		<Prefer32Bit>false</Prefer32Bit>
+		<RootNamespace>Inedo.DbUpdater</RootNamespace>
+	</PropertyGroup>
+	<ItemGroup Condition="$(TargetFramework)=='net452'">
+		<Reference Include="System.IO.Compression" />
+	</ItemGroup>
+	<ItemGroup Condition="$(TargetFramework)=='net5.0'">
+		<PackageReference Include="Microsoft.Data.SqlClient" Version="3.0.1" />
+	</ItemGroup>
+	<Import Project="..\InedoSqlCommon\InedoSqlCommon.projitems" Label="Shared" />
+	<ItemGroup Condition="$(TargetFramework)!='net452'">
+		<None Remove="App.config" />
+	</ItemGroup>
 </Project>

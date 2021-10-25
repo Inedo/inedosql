@@ -7,7 +7,7 @@ namespace Inedo.DbUpdater
 {
     internal sealed class ArgList
     {
-        public ArgList(string[] args)
+        public ArgList(IEnumerable<string> args)
         {
             var unnamed = args.Where(a => !a.StartsWith("-")).ToList();
             this.Command = unnamed.FirstOrDefault()?.ToLowerInvariant();

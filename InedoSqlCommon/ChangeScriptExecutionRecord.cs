@@ -10,14 +10,7 @@ namespace Inedo.DbUpdater
     {
         private readonly Lazy<string> scriptText;
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="ChangeScriptExecutionRecord"/> class.
-        /// </summary>
-        /// <param name="id">The script ID.</param>
-        /// <param name="name">The script name.</param>
-        /// <param name="executionDate">The script execution date.</param>
-        /// <param name="successfullyExecuted">Value indicating whether the script was successful.</param>
-        public ChangeScriptExecutionRecord(ChangeScriptId id, string name, DateTime executionDate, bool successfullyExecuted, string errorText = null, string errorResolvedText = null, DateTime? errorResolvedDate = null, byte[] scriptBytes = null)
+        internal ChangeScriptExecutionRecord(ChangeScriptId id, string name, DateTime executionDate, bool successfullyExecuted, string errorText = null, string errorResolvedText = null, DateTime? errorResolvedDate = null, byte[] scriptBytes = null)
         {
             this.Id = id;
             this.Name = name;
@@ -46,9 +39,21 @@ namespace Inedo.DbUpdater
         /// Gets a value indicating whether the script was successful.
         /// </summary>
         public bool SuccessfullyExecuted { get; }
+        /// <summary>
+        /// Gets the error message.
+        /// </summary>
         public string ErrorText { get; }
+        /// <summary>
+        /// Gets notes about how the error was resolved.
+        /// </summary>
         public string ErrorResolvedText { get; }
+        /// <summary>
+        /// Gets the date the error was resolved, or null if it has not been resolved.
+        /// </summary>
         public DateTime? ErrorResolvedDate { get; }
+        /// <summary>
+        /// Gets the script contents.
+        /// </summary>
         public string ScriptText => this.scriptText?.Value;
     }
 }
