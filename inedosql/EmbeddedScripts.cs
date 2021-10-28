@@ -14,6 +14,7 @@ namespace Inedo.DbUpdater
 
         private static IReadOnlyCollection<Script> ReadScripts()
         {
+#if NETFRAMEWORK
             var path = typeof(EmbeddedScripts).Assembly.Location;
             if (!string.IsNullOrEmpty(path))
             {
@@ -29,6 +30,7 @@ namespace Inedo.DbUpdater
                 {
                 }
             }
+#endif
 
             return null;
         }
