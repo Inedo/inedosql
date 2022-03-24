@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<OutputType>exe</OutputType>
-		<TargetFrameworks>net452;net5.0</TargetFrameworks>
+		<TargetFrameworks>net452;net5.0;net6.0</TargetFrameworks>
 		<LangVersion>latest</LangVersion>
 		<Prefer32Bit>false</Prefer32Bit>
 		<RootNamespace>Inedo.DbUpdater</RootNamespace>
@@ -10,9 +10,12 @@
 		<Reference Include="System.IO.Compression" />
 	</ItemGroup>
 	<ItemGroup Condition="$(TargetFramework)=='net5.0'">
-		<PackageReference Include="Microsoft.Data.SqlClient" Version="3.0.1" />
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="4.1.0" />
 	</ItemGroup>
-	<Import Project="..\InedoSqlCommon\InedoSqlCommon.projitems" Label="Shared" />
+  <ItemGroup Condition="$(TargetFramework)=='net6.0'">
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="4.1.0" />
+  </ItemGroup>
+  <Import Project="..\InedoSqlCommon\InedoSqlCommon.projitems" Label="Shared" />
 	<ItemGroup Condition="$(TargetFramework)!='net452'">
 		<None Remove="App.config" />
 	</ItemGroup>

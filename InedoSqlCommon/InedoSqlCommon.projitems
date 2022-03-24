@@ -18,6 +18,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)ExecutionMode.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)InedoSqlException.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Script.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)InedoSqlUtil.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)SqlServer\MessageLoggedEventArgs.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)SqlServer\Scripts.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)SqlServer\SqlServerDatabaseConnection.cs" />

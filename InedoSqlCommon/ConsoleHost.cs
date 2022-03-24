@@ -277,7 +277,7 @@ namespace Inedo.DbUpdater
 
         private static SqlServerDatabaseConnection CreateConnection(string connectionString)
         {
-            var connection = new SqlServerDatabaseConnection(connectionString);
+            var connection = new SqlServerDatabaseConnection(InedoSqlUtil.EnsureRequireEncryptionDefaultsToFalse(connectionString));
             connection.LogInformationMessage += (s, e) => Console.WriteLine(e.Message);
             connection.LogErrorMessage += (s, e) => Console.Error.WriteLine(e.Message);
             return connection;

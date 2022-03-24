@@ -1,12 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFrameworks>net452;net5.0</TargetFrameworks>
+		<TargetFrameworks>net452;net5.0;net6.0</TargetFrameworks>
 		<LangVersion>latest</LangVersion>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<Authors>Inedo</Authors>
 		<Company>Inedo</Company>
 		<Product>InedoSql</Product>
-		<Copyright>Copyright © Inedo 2021</Copyright>
+		<Copyright>Copyright © Inedo 2022</Copyright>
 		<Description>SQL Server database schema and script management tool.</Description>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageProjectUrl>https://github.com/Inedo/inedosql</PackageProjectUrl>
@@ -23,7 +23,10 @@
 		<Reference Include="System.IO.Compression" />
 	</ItemGroup>
 	<ItemGroup Condition="$(TargetFramework)=='net5.0'">
-		<PackageReference Include="Microsoft.Data.SqlClient" Version="3.0.1" />
+		<PackageReference Include="Microsoft.Data.SqlClient" Version="4.1.0" />
 	</ItemGroup>
-	<Import Project="..\InedoSqlCommon\InedoSqlCommon.projitems" Label="Shared" />
+  <ItemGroup Condition="$(TargetFramework)=='net6.0'">
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="4.1.0" />
+  </ItemGroup>
+  <Import Project="..\InedoSqlCommon\InedoSqlCommon.projitems" Label="Shared" />
 </Project>
