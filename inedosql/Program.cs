@@ -1,9 +1,8 @@
 ﻿using System.Threading.Tasks;
 
-namespace Inedo.DbUpdater
+namespace Inedo.DbUpdater;
+
+public static class Program
 {
-    public static class Program
-    {
-        public static Task<int> Main(string[] args) => ConsoleHost.RunAsync(args);
-    }
+    public static Task<int> Main(string[] args) => ConsoleHost.RunAsync(args);
 }

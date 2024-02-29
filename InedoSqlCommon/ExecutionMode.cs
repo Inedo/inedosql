@@ -1,9 +1,8 @@
-﻿namespace Inedo.DbUpdater
+﻿namespace Inedo.DbUpdater;
+
+internal enum ExecutionMode
 {
-    internal enum ExecutionMode
-    {
-        Once,
-        OnChange,
-        Always
-    }
+    Once,
+    OnChange,
+    Always
 }

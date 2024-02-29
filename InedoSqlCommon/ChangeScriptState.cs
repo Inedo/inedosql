@@ -40,7 +40,7 @@ namespace Inedo.DbUpdater
         {
             this.IsInitialized = initialized;
             this.ChangeScripterVersion = version;
-            this.Scripts = (scripts ?? Enumerable.Empty<ChangeScriptExecutionRecord>()).ToList().AsReadOnly();
+            this.Scripts = (scripts ?? []).ToList().AsReadOnly();
         }
 
         /// <summary>

@@ -1,16 +1,8 @@
 ﻿using System;
 
-#if NET452
-#else
-using Microsoft.Data.SqlClient;
-#endif
+namespace Inedo.DbUpdater.SqlServer;
 
-namespace Inedo.DbUpdater.SqlServer
+internal sealed class MessageLoggedEventArgs(string message) : EventArgs
 {
-    internal sealed class MessageLoggedEventArgs : EventArgs
-    {
-        public MessageLoggedEventArgs(string message) => this.Message = message;
-
-        public string Message { get; }
-    }
+    public string Message { get; } = message;
 }
