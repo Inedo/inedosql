@@ -4,12 +4,25 @@
 		<TargetFramework>net8.0</TargetFramework>
 		<LangVersion>latest</LangVersion>
 		<RootNamespace>Inedo.DbUpdater</RootNamespace>
-	</PropertyGroup>
+    <Authors>Inedo</Authors>
+    <Company>Inedo</Company>
+    <Product>InedoSql</Product>
+    <Description>SQL Server database schema and script management tool.</Description>
+    <Copyright>Copyright © Inedo 2024</Copyright>
+    <PackAsTool>true</PackAsTool>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageTags>inedo sql changescripts</PackageTags>
+    <PackageProjectUrl>https://github.com/Inedo/inedosql</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Inedo/inedosql.git</RepositoryUrl>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <FileVersion>1.0.0.0</FileVersion>
+    <Version>0.0.0</Version>
+  </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.0" />
   </ItemGroup>
 	<ItemGroup>
-		<None Remove="App.config" />
+	  <EmbeddedResource Include="SqlServer\Scripts\*.sql" />
 	</ItemGroup>
-  <Import Project="..\InedoSqlCommon\InedoSqlCommon.projitems" Label="Shared" />
 </Project>

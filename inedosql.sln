@@ -7,10 +7,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "inedosql", "inedosql\inedos
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Inedo.DbUpdater", "Inedo.DbUpdater\Inedo.DbUpdater.csproj", "{D08ABA81-495F-4204-994F-568C929AEF25}"
 EndProject
-Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "InedoSqlCommon", "InedoSqlCommon\InedoSqlCommon.shproj", "{764109F8-6625-4FB7-B36A-B1568AA7C23F}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "inedosqlTool", "inedosqlTool\inedosqlTool.csproj", "{0450219F-FD57-42D5-8CEE-74B7D947F861}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -25,20 +21,11 @@ Global
 		{D08ABA81-495F-4204-994F-568C929AEF25}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D08ABA81-495F-4204-994F-568C929AEF25}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D08ABA81-495F-4204-994F-568C929AEF25}.Release|Any CPU.Build.0 = Release|Any CPU
-		{0450219F-FD57-42D5-8CEE-74B7D947F861}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{0450219F-FD57-42D5-8CEE-74B7D947F861}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{0450219F-FD57-42D5-8CEE-74B7D947F861}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{0450219F-FD57-42D5-8CEE-74B7D947F861}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {C9B36529-2263-4330-9298-205CC74C1EEF}
-	EndGlobalSection
-	GlobalSection(SharedMSBuildProjectFiles) = preSolution
-		InedoSqlCommon\InedoSqlCommon.projitems*{764109f8-6625-4fb7-b36a-b1568aa7c23f}*SharedItemsImports = 13
-		InedoSqlCommon\InedoSqlCommon.projitems*{bea91e79-784e-430f-9e8d-be1e31badce8}*SharedItemsImports = 5
-		InedoSqlCommon\InedoSqlCommon.projitems*{d08aba81-495f-4204-994f-568c929aef25}*SharedItemsImports = 5
 	EndGlobalSection
 EndGlobal

@@ -22,8 +22,4 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.0" />
   </ItemGroup>
-  <ItemGroup>
-    <None Remove="App.config" />
-  </ItemGroup>
-  <Import Project="..\InedoSqlCommon\InedoSqlCommon.projitems" Label="Shared" />
 </Project>

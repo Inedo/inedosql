@@ -70,38 +70,27 @@ public static class ConsoleHost
 
     private static int Update(string scriptPath, string connectionString, bool force)
     {
+        ArgumentException.ThrowIfNullOrEmpty(scriptPath);
+
         IReadOnlyCollection<Script> sqlScripts;
 
-        if (string.IsNullOrEmpty(scriptPath))
+        if (scriptPath.EndsWith(".zip", StringComparison.OrdinalIgnoreCase) && File.Exists(scriptPath))
         {
-            if (!EmbeddedScripts.Available)
-                throw new InedoSqlException("Missing required argument <script-path>");
-
-            sqlScripts = EmbeddedScripts.All;
+            using var zip = new ZipArchive(File.OpenRead(scriptPath), ZipArchiveMode.Read);
+            var zipScripts = Script.GetScriptZipEntries(zip);
+            zipScripts.Sort();
+            sqlScripts = zipScripts.AsReadOnly();
+        }
+        else if (Directory.Exists(scriptPath))
+        {
+            var fileScripts = Script.GetScriptFiles(scriptPath);
+            fileScripts.Sort();
+            sqlScripts = fileScripts.AsReadOnly();
         }
         else
         {
-            if (EmbeddedScripts.Available)
-                throw new InedoSqlException("<script-path> is invalid when scripts are embedded.");
-
-            if (scriptPath.EndsWith(".zip", StringComparison.OrdinalIgnoreCase) && File.Exists(scriptPath))
-            {
-                using var zip = new ZipArchive(File.OpenRead(scriptPath), ZipArchiveMode.Read);
-                var zipScripts = Script.GetScriptZipEntries(zip);
-                zipScripts.Sort();
-                sqlScripts = zipScripts.AsReadOnly();
-            }
-            else if (Directory.Exists(scriptPath))
-            {
-                var fileScripts = Script.GetScriptFiles(scriptPath);
-                fileScripts.Sort();
-                sqlScripts = fileScripts.AsReadOnly();
-            }
-            else
-            {
-                Console.Error.WriteLine($"Script path \"{scriptPath}\" not found.");
-                return -1;
-            }
+            Console.Error.WriteLine($"Script path \"{scriptPath}\" not found.");
+            return -1;
         }
 
         using var db = CreateConnection(connectionString);
