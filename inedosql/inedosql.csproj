@@ -25,4 +25,7 @@
 	<ItemGroup>
 	  <EmbeddedResource Include="SqlServer\Scripts\*.sql" />
 	</ItemGroup>
+	<ItemGroup>
+	  <ProjectReference Include="..\Inedo.DbUpdater\Inedo.DbUpdater.csproj" />
+	</ItemGroup>
 </Project>

@@ -24,7 +24,7 @@ internal static class Scripts
 
     private static string Read(string name)
     {
-        using var reader = new StreamReader(typeof(Scripts).Assembly.GetManifestResourceStream(typeof(Scripts).FullName + "." + name), Encoding.UTF8);
+        using var reader = new StreamReader(typeof(Scripts).Assembly.GetManifestResourceStream(typeof(Scripts).FullName + "." + name)!, Encoding.UTF8);
         return reader.ReadToEnd();
     }
 }

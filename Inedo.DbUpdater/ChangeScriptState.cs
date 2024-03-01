@@ -32,11 +32,11 @@ namespace Inedo.DbUpdater
         /// </summary>
         /// <param name="scripts">The scripts which have been executed.</param>
         /// <param name="version">The version of the change scripts table.</param>
-        public ChangeScriptState(int version, IEnumerable<ChangeScriptExecutionRecord> scripts)
+        public ChangeScriptState(int version, IEnumerable<ChangeScriptExecutionRecord>? scripts)
             : this(true, version, scripts)
         {
         }
-        private ChangeScriptState(bool initialized, int version, IEnumerable<ChangeScriptExecutionRecord> scripts)
+        private ChangeScriptState(bool initialized, int version, IEnumerable<ChangeScriptExecutionRecord>? scripts)
         {
             this.IsInitialized = initialized;
             this.ChangeScripterVersion = version;
@@ -61,7 +61,7 @@ namespace Inedo.DbUpdater
         /// </summary>
         /// <param name="nameOrId">The name or ID of the script.</param>
         /// <returns>Execution record for the specified script.</returns>
-        public ChangeScriptExecutionRecord GetExecutionRecord(string nameOrId)
+        public ChangeScriptExecutionRecord? GetExecutionRecord(string nameOrId)
         {
             if (Guid.TryParse(nameOrId, out var g))
                 return this.Scripts.FirstOrDefault(s => s.Id.Guid == g);

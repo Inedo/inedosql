@@ -7,18 +7,37 @@ using Microsoft.Data.SqlClient;
 
 namespace Inedo.DbUpdater.SqlServer;
 
-internal sealed class SqlServerDatabaseConnection(string connectionString) : IDisposable
+/// <summary>
+/// Represents a connection to a SQL Server database.
+/// </summary>
+/// <param name="connectionString">SQL Server connection string.</param>
+public sealed class SqlServerDatabaseConnection(string connectionString) : IDisposable
 {
-    private SqlConnection connection;
-    private SqlCommand command;
+    private SqlConnection? connection;
+    private SqlCommand? command;
     private bool disposed;
 
-    public event EventHandler<MessageLoggedEventArgs> LogInformationMessage;
-    public event EventHandler<MessageLoggedEventArgs> LogErrorMessage;
+    /// <summary>
+    /// Raised when an informational message is logged.
+    /// </summary>
+    public event EventHandler<MessageLoggedEventArgs>? LogInformationMessage;
+    /// <summary>
+    /// Raised when an error message is logged.
+    /// </summary>
+    public event EventHandler<MessageLoggedEventArgs>? LogErrorMessage;
 
+    /// <summary>
+    /// Gets the SQL connection string.
+    /// </summary>
     public string ConnectionString { get; } = connectionString;
+    /// <summary>
+    /// Gets a value indicating whether an error has been logged.
+    /// </summary>
     public bool ErrorLogged { get; private set; }
 
+    /// <summary>
+    /// Writes metadata tables to the database if necessary.
+    /// </summary>
     public void InitializeDatabase()
     {
         using var transaction = this.GetConnection().BeginTransaction();
@@ -31,6 +50,11 @@ internal sealed class SqlServerDatabaseConnection(string connectionString) : IDi
 
         transaction.Commit();
     }
+    /// <summary>
+    /// Upgrades a changescript schema.
+    /// </summary>
+    /// <param name="canoncialGuids">Legacy ID mapping table.</param>
+    /// <exception cref="InvalidOperationException">Database has not been initialized or has already been upgraded.</exception>
     public void UpgradeSchema(IDictionary<int, Guid> canoncialGuids)
     {
         var state = this.GetState();
@@ -81,6 +105,10 @@ internal sealed class SqlServerDatabaseConnection(string connectionString) : IDi
         transaction.Commit();
     }
 
+    /// <summary>
+    /// Returns the current state of change scripts in the database.
+    /// </summary>
+    /// <returns>Current state of change scripts in the database.</returns>
     public ChangeScriptState GetState()
     {
         int version = this.GetChangeScriptVersion();
@@ -95,8 +123,8 @@ internal sealed class SqlServerDatabaseConnection(string connectionString) : IDi
                     {
                         return new ChangeScriptExecutionRecord(
                             new ChangeScriptId((int)r["Script_Id"], (Guid)r["Script_Guid"]),
-                            r["Script_Name"]?.ToString(),
-                            readUtcDateTime(r["Executed_Date"]).Value,
+                            r["Script_Name"]?.ToString() ?? string.Empty,
+                            readUtcDateTime(r["Executed_Date"])!.Value,
                             r["Success_Indicator"]?.ToString() == "Y",
                             r["Error_Text"]?.ToString(),
                             r["ErrorResolved_Text"]?.ToString(),
@@ -118,8 +146,8 @@ internal sealed class SqlServerDatabaseConnection(string connectionString) : IDi
                     {
                         return new ChangeScriptExecutionRecord(
                             new ChangeScriptId((int)r["Script_Id"], (Guid)r["Script_Guid"]),
-                            r["Script_Name"]?.ToString(),
-                            readUtcDateTime(r["Executed_Date"]).Value,
+                            r["Script_Name"]?.ToString() ?? string.Empty,
+                            readUtcDateTime(r["Executed_Date"])!.Value,
                             r["Success_Indicator"]?.ToString() == "Y"
                         );
                     }
@@ -137,8 +165,8 @@ internal sealed class SqlServerDatabaseConnection(string connectionString) : IDi
                     {
                         return new ChangeScriptExecutionRecord(
                             new ChangeScriptId((int)r["Script_Id"], (long)r["Numeric_Release_Number"]),
-                            r["Batch_Name"]?.ToString(),
-                            readLocalDateTime(r["Executed_Date"]).Value,
+                            r["Batch_Name"]?.ToString() ?? string.Empty,
+                            readLocalDateTime(r["Executed_Date"])!.Value,
                             r["Success_Indicator"]?.ToString() == "Y"
                         );
                     }
@@ -153,6 +181,11 @@ internal sealed class SqlServerDatabaseConnection(string connectionString) : IDi
         static DateTime? readLocalDateTime(object o) => o is DateTime d ? (DateTime?)new DateTime(d.Ticks, DateTimeKind.Local).ToUniversalTime() : null;
     }
 
+    /// <summary>
+    /// Marks an error as resolved.
+    /// </summary>
+    /// <param name="scriptId">Unique ID of the script.</param>
+    /// <param name="comment">Resolution comment.</param>
     public void ResolveError(Guid scriptId, string comment)
     {
         this.ExecuteNonQuery(
@@ -162,6 +195,10 @@ internal sealed class SqlServerDatabaseConnection(string connectionString) : IDi
             new SqlParameter("ErrorResolved_Text", SqlDbType.NVarChar, -1) { Value = (object)comment ?? DBNull.Value }
         );
     }
+    /// <summary>
+    /// Marks all errors as resolved.
+    /// </summary>
+    /// <param name="comment">Resolution comment.</param>
     public void ResolveAllErrors(string comment)
     {
         this.ExecuteNonQuery(
@@ -171,6 +208,12 @@ internal sealed class SqlServerDatabaseConnection(string connectionString) : IDi
         );
     }
 
+    /// <summary>
+    /// Executes change scripts.
+    /// </summary>
+    /// <param name="scripts">Scripts to execute.</param>
+    /// <param name="state">Current state.</param>
+    /// <returns>True if all scripts were successful; otherwise false.</returns>
     public bool ExecuteScripts(IEnumerable<Script> scripts, ChangeScriptState state)
     {
         var lookup = state.Scripts.Where(s => s.Id?.Guid.HasValue == true).ToDictionary(s => s.Id.Guid.GetValueOrDefault());
@@ -192,6 +235,7 @@ internal sealed class SqlServerDatabaseConnection(string connectionString) : IDi
         return true;
     }
 
+    /// <inheritdoc/>
     public void Dispose() => this.Dispose(true);
 
     private void Dispose(bool disposing)
@@ -213,7 +257,7 @@ internal sealed class SqlServerDatabaseConnection(string connectionString) : IDi
 
     private bool ExecuteTrackedScript(Script script, Dictionary<Guid, ChangeScriptExecutionRecord> currentState)
     {
-        var scriptId = script.Id.Value;
+        var scriptId = script.Id!.Value;
         currentState.TryGetValue(scriptId.Guid, out var previousExecution);
 
         if (scriptId.Mode == ExecutionMode.Once && previousExecution != null)
@@ -248,7 +292,7 @@ internal sealed class SqlServerDatabaseConnection(string connectionString) : IDi
         var errors = new List<string>();
 
         bool success;
-        SqlTransaction transaction = null;
+        SqlTransaction? transaction = null;
         try
         {
             if (scriptId.UseTransaction)
@@ -291,12 +335,12 @@ internal sealed class SqlServerDatabaseConnection(string connectionString) : IDi
         return success;
     }
     
-    private void ExecuteNonQuery(string query, SqlTransaction transaction, params SqlParameter[] args)
+    private void ExecuteNonQuery(string query, SqlTransaction? transaction, params SqlParameter[] args)
     {
         var command = this.GetCommand(query, transaction, args);
         command.ExecuteNonQuery();
     }
-    private void ExecuteQueryWithSplitter(string query, SqlTransaction transaction = null)
+    private void ExecuteQueryWithSplitter(string query, SqlTransaction? transaction = null)
     {
         foreach (var sql in SqlSplitter.SplitSqlScript(query))
         {
@@ -308,7 +352,7 @@ internal sealed class SqlServerDatabaseConnection(string connectionString) : IDi
         }
     }
     private List<TResult> ExecuteTable<TResult>(string query, Func<SqlDataReader, TResult> adapter, params SqlParameter[] args) => this.ExecuteTable(query, adapter, transaction: null, args);
-    private List<TResult> ExecuteTable<TResult>(string query, Func<SqlDataReader, TResult> adapter, SqlTransaction transaction, params SqlParameter[] args)
+    private List<TResult> ExecuteTable<TResult>(string query, Func<SqlDataReader, TResult> adapter, SqlTransaction? transaction, params SqlParameter[] args)
     {
         using var command = new SqlCommand(query, this.GetConnection(), transaction) { CommandTimeout = 0 };
         command.Parameters.AddRange(args);
@@ -335,7 +379,7 @@ internal sealed class SqlServerDatabaseConnection(string connectionString) : IDi
 
         return this.connection;
     }
-    private SqlCommand GetCommand(string query, SqlTransaction transaction = null, SqlParameter[] args = null)
+    private SqlCommand GetCommand(string query, SqlTransaction? transaction = null, SqlParameter[]? args = null)
     {
         if (this.command == null)
         {
@@ -367,7 +411,7 @@ internal sealed class SqlServerDatabaseConnection(string connectionString) : IDi
                 this.LogInformation(error.Message);
         }
     }
-    private int GetChangeScriptVersion(SqlTransaction transaction = null)
+    private int GetChangeScriptVersion(SqlTransaction? transaction = null)
     {
         var table = this.ExecuteTable(
             "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME IN ('__BuildMaster_DbSchemaChanges', '__BuildMaster_DbSchemaChanges2', '__InedoDb_DbSchemaChanges')",

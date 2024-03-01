@@ -8,11 +8,14 @@ using System.Text.RegularExpressions;
 
 namespace Inedo.DbUpdater;
 
-internal sealed partial class Script : IComparable<Script>, IEquatable<Script>
+/// <summary>
+/// Represents a SQL script.
+/// </summary>
+public sealed partial class Script : IComparable<Script>, IEquatable<Script>
 {
     private static readonly char[] separators = ['/', '\\'];
 
-    public Script(string fileName, string scriptText)
+    internal Script(string fileName, string scriptText)
     {
         this.FileName = fileName;
         this.ScriptText = scriptText;
@@ -20,13 +23,25 @@ internal sealed partial class Script : IComparable<Script>, IEquatable<Script>
             this.Id = id;
     }
 
+    /// <summary>
+    /// Gets the file name.
+    /// </summary>
     public string FileName { get; }
+    /// <summary>
+    /// Gets ths content of the file.
+    /// </summary>
     public string ScriptText { get; }
+    /// <summary>
+    /// Gets the unique script ID.
+    /// </summary>
     public CanonicalScriptId? Id { get; }
 
+    /// <inheritdoc/>
     public override int GetHashCode() => StringComparer.OrdinalIgnoreCase.GetHashCode(this.FileName ?? string.Empty);
-    public override bool Equals(object obj) => this.Equals(obj as Script);
-    public bool Equals(Script other)
+    /// <inheritdoc/>
+    public override bool Equals(object? obj) => this.Equals(obj as Script);
+    /// <inheritdoc/>
+    public bool Equals(Script? other)
     {
         if (ReferenceEquals(this, other))
             return true;
@@ -35,13 +50,18 @@ internal sealed partial class Script : IComparable<Script>, IEquatable<Script>
 
         return string.Equals(this.FileName, other.FileName, StringComparison.OrdinalIgnoreCase);
     }
-    public int CompareTo(Script other)
+    /// <inheritdoc/>
+    public int CompareTo(Script? other)
     {
-        int res;
+        if (ReferenceEquals(this, other))
+            return 0;
+        if (other is null)
+            return -1;
 
         var myName = this.FileName.Split(separators, StringSplitOptions.RemoveEmptyEntries);
         var otherName = other.FileName.Split(separators, StringSplitOptions.RemoveEmptyEntries);
 
+        int res;
         for (int i = 0; i < Math.Min(myName.Length, otherName.Length); i++)
         {
             res = string.Compare(myName[i], otherName[i], StringComparison.OrdinalIgnoreCase);
@@ -58,8 +78,15 @@ internal sealed partial class Script : IComparable<Script>, IEquatable<Script>
 
         return res;
     }
+    /// <inheritdoc/>
     public override string ToString() => this.FileName;
 
+    /// <summary>
+    /// Attempts to extract script ID information.
+    /// </summary>
+    /// <param name="scriptText">The script to parse.</param>
+    /// <param name="id">The resulting script ID.s</param>
+    /// <returns>True if ID was found; otherwise false.</returns>
     public static bool ExtractId(string scriptText, out CanonicalScriptId id)
     {
         var match = ScriptIdRegex().Match(scriptText);
@@ -96,14 +123,28 @@ internal sealed partial class Script : IComparable<Script>, IEquatable<Script>
         return false;
     }
 
+    /// <summary>
+    /// Returns script files in the specified path.
+    /// </summary>
+    /// <param name="scriptPath">The path to iterate.</param>
+    /// <returns>List of script files in the specified path.</returns>
     public static List<Script> GetScriptFiles(string scriptPath)
     {
+        ArgumentException.ThrowIfNullOrEmpty(scriptPath);
+
         return Directory.EnumerateFiles(scriptPath, "*.sql", SearchOption.AllDirectories)
             .Select(s => new Script(s[scriptPath.Length..].TrimStart(separators), File.ReadAllText(s)))
             .ToList();
     }
+    /// <summary>
+    /// Returns script files in the specified zip.
+    /// </summary>
+    /// <param name="zip">The zip file to iterate.</param>
+    /// <returns>List of script files in the specified zip.</returns>
     public static List<Script> GetScriptZipEntries(ZipArchive zip)
     {
+        ArgumentNullException.ThrowIfNull(zip);
+
         var scripts = new List<Script>(zip.Entries.Count);
 
         foreach (var entry in zip.Entries.Where(e => e.FullName.EndsWith(".sql", StringComparison.OrdinalIgnoreCase)))

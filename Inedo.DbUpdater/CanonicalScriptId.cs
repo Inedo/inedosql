@@ -2,10 +2,33 @@
 
 namespace Inedo.DbUpdater;
 
-internal readonly struct CanonicalScriptId(Guid guid, int? legacyId, ExecutionMode mode, bool useTransaction)
+/// <summary>
+/// Uniquely identifies a change script.
+/// </summary>
+public readonly struct CanonicalScriptId
 {
-    public Guid Guid { get; } = guid;
-    public int? LegacyId { get; } = legacyId;
-    public ExecutionMode Mode { get; } = mode;
-    public bool UseTransaction { get; } = useTransaction;
+    internal CanonicalScriptId(Guid guid, int? legacyId, ExecutionMode mode, bool useTransaction)
+    {
+        this.Guid = guid;
+        this.LegacyId = legacyId;
+        this.Mode = mode;
+        this.UseTransaction = useTransaction;
+    }
+
+    /// <summary>
+    /// Gets the script guid.
+    /// </summary>
+    public Guid Guid { get; }
+    /// <summary>
+    /// Gets the legacy ID if applicable.
+    /// </summary>
+    public int? LegacyId { get; }
+    /// <summary>
+    /// Gets the script execution mode.
+    /// </summary>
+    public ExecutionMode Mode { get; }
+    /// <summary>
+    /// Gets a value indicating whether to use a transaction.
+    /// </summary>
+    public bool UseTransaction { get; }
 }

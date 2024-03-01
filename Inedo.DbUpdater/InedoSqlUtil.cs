@@ -3,8 +3,6 @@ using System.Data.Common;
 using System.Text;
 using System.Text.RegularExpressions;
 
-#nullable enable
-
 namespace Inedo.DbUpdater;
 
 /// <summary>

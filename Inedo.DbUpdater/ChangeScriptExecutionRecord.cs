@@ -8,9 +8,9 @@ namespace Inedo.DbUpdater;
 /// </summary>
 public sealed class ChangeScriptExecutionRecord
 {
-    private readonly Lazy<string> scriptText;
+    private readonly Lazy<string>? scriptText;
 
-    internal ChangeScriptExecutionRecord(ChangeScriptId id, string name, DateTime executionDate, bool successfullyExecuted, string errorText = null, string errorResolvedText = null, DateTime? errorResolvedDate = null, byte[] scriptBytes = null)
+    internal ChangeScriptExecutionRecord(ChangeScriptId id, string name, DateTime executionDate, bool successfullyExecuted, string? errorText = null, string? errorResolvedText = null, DateTime? errorResolvedDate = null, byte[]? scriptBytes = null)
     {
         this.Id = id;
         this.Name = name;
@@ -42,11 +42,11 @@ public sealed class ChangeScriptExecutionRecord
     /// <summary>
     /// Gets the error message.
     /// </summary>
-    public string ErrorText { get; }
+    public string? ErrorText { get; }
     /// <summary>
     /// Gets notes about how the error was resolved.
     /// </summary>
-    public string ErrorResolvedText { get; }
+    public string? ErrorResolvedText { get; }
     /// <summary>
     /// Gets the date the error was resolved, or null if it has not been resolved.
     /// </summary>
@@ -54,5 +54,5 @@ public sealed class ChangeScriptExecutionRecord
     /// <summary>
     /// Gets the script contents.
     /// </summary>
-    public string ScriptText => this.scriptText?.Value;
+    public string? ScriptText => this.scriptText?.Value;
 }
