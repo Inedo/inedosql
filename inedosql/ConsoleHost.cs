@@ -49,6 +49,7 @@ public static class ConsoleHost
             "error" => ShowErrorDetails(args.TryGetPositional(0), GetConnectionString(args), false),
             "script" => ShowErrorDetails(args.TryGetPositional(0), GetConnectionString(args), true),
             "resolve-error" => resolveErrors(),
+            "strike-struck" => StrikeStruckTables(GetConnectionString(args)),
             _ => throw new InedoSqlException("Invalid command: " + args.Command, true)
         };
 
@@ -236,6 +237,16 @@ public static class ConsoleHost
             throw new InedoSqlException("Database has not been initialized.");
 
         db.ResolveAllErrors(comment);
+        return 0;
+    }
+    private static int StrikeStruckTables(string connectionString)
+    {
+        using var db = CreateConnection(connectionString);
+        var state = db.GetState();
+        if (!state.IsInitialized)
+            throw new InedoSqlException("Database has not been initialized.");
+
+        db.StrikeStruckTables();
         return 0;
     }
 

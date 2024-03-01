@@ -209,6 +209,22 @@ public sealed class SqlServerDatabaseConnection(string connectionString) : IDisp
     }
 
     /// <summary>
+    /// Drops all tables that have been marked as struck.
+    /// </summary>
+    public void StrikeStruckTables()
+    {
+        var struckTables = this.ExecuteTable(Scripts.GetStruckTables, r => r.GetString(0));
+        if (struckTables.Count > 0)
+        {
+            foreach (var t in struckTables)
+            {
+                Console.WriteLine($"Dropping {t}...");
+                this.ExecuteNonQuery($"DROP TABLE [{t}]", null);
+            }
+        }
+    }
+
+    /// <summary>
     /// Executes change scripts.
     /// </summary>
     /// <param name="scripts">Scripts to execute.</param>
