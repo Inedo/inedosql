@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.IO.Compression;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.IO.Compression;
+using Inedo.DbUpdater.PgSql;
 using Inedo.DbUpdater.SqlServer;
 
 namespace Inedo.DbUpdater;
@@ -42,14 +38,16 @@ public static class ConsoleHost
             return 1;
         }
 
+        using var db = CreateConnection(args);
+
         return args.Command switch
         {
-            "update" => Update(args.TryGetPositional(0), GetConnectionString(args), args.Named.ContainsKey("force")),
-            "errors" => ListErrors(args.Named.ContainsKey("all"), GetConnectionString(args)),
-            "error" => ShowErrorDetails(args.TryGetPositional(0), GetConnectionString(args), false),
-            "script" => ShowErrorDetails(args.TryGetPositional(0), GetConnectionString(args), true),
+            "update" => Update(args.TryGetPositional(0), db, args.Named.ContainsKey("force")),
+            "errors" => ListErrors(args.Named.ContainsKey("all"), db),
+            "error" => ShowErrorDetails(args.TryGetPositional(0), db, false),
+            "script" => ShowErrorDetails(args.TryGetPositional(0), db, true),
             "resolve-error" => resolveErrors(),
-            "strike-struck" => StrikeStruckTables(GetConnectionString(args)),
+            "strike-struck" => StrikeStruckTables(db),
             _ => throw new InedoSqlException("Invalid command: " + args.Command, true)
         };
 
@@ -59,17 +57,16 @@ public static class ConsoleHost
             if (args.Named.ContainsKey("all") && args.Positional.Count > 0)
                 throw new InedoSqlException("--all cannot be specified with a script GUID.");
 
-            var cs = GetConnectionString(args);
             args.Named.TryGetValue("comment", out var comment);
 
             if (args.Named.ContainsKey("all"))
-                return ResolveAllErrors(cs, comment);
+                return ResolveAllErrors(db, comment);
             else
-                return ResolveError(args.Positional[0], cs, comment);
+                return ResolveError(args.Positional[0], db, comment);
         }
     }
 
-    private static int Update(string scriptPath, string connectionString, bool force)
+    private static int Update(string scriptPath, DatabaseConnection db, bool force)
     {
         ArgumentException.ThrowIfNullOrEmpty(scriptPath);
 
@@ -94,7 +91,6 @@ public static class ConsoleHost
             return -1;
         }
 
-        using var db = CreateConnection(connectionString);
         ChangeScriptState state;
         try
         {
@@ -160,9 +156,8 @@ public static class ConsoleHost
 
         return 0;
     }
-    private static int ListErrors(bool all, string connectionString)
+    private static int ListErrors(bool all, DatabaseConnection db)
     {
-        using var db = CreateConnection(connectionString);
         var state = db.GetState();
         if (!state.IsInitialized)
             throw new InedoSqlException("Database has not been initialized.");
@@ -176,9 +171,8 @@ public static class ConsoleHost
 
         return 0;
     }
-    private static int ShowErrorDetails(string nameOrId, string connectionString, bool writeScript)
+    private static int ShowErrorDetails(string nameOrId, DatabaseConnection db, bool writeScript)
     {
-        using var db = CreateConnection(connectionString);
         var state = db.GetState();
         if (!state.IsInitialized)
             throw new InedoSqlException("Database has not been initialized.");
@@ -186,10 +180,10 @@ public static class ConsoleHost
         var script = state.GetExecutionRecord(nameOrId)
             ?? throw new InedoSqlException($"Tracked script {nameOrId} has not been executed against this database.");
 
-        Console.WriteLine("GUID: " + script.Id);
-        Console.WriteLine("Name: " + script.Name);
-        Console.WriteLine("Executed: " + script.ExecutionDate.ToLocalTime());
-        Console.WriteLine("Resolved: " + (script.ErrorResolvedDate?.ToLocalTime().ToString() ?? "-"));
+        Console.WriteLine($"GUID: {script.Id}");
+        Console.WriteLine($"Name: {script.Name}");
+        Console.WriteLine($"Executed: {script.ExecutionDate.ToLocalTime()}");
+        Console.WriteLine($"Resolved: {script.ErrorResolvedDate?.ToLocalTime().ToString() ?? "-"}");
         Console.WriteLine();
         Console.WriteLine("Resolution:");
         Console.WriteLine(script.ErrorResolvedText ?? "-");
@@ -207,12 +201,11 @@ public static class ConsoleHost
 
         return 0;
     }
-    private static int ResolveError(string scriptId, string connectionString, string comment)
+    private static int ResolveError(string scriptId, DatabaseConnection db, string comment)
     {
         if (!Guid.TryParse(scriptId, out var guid))
-            throw new InedoSqlException("Invalid script GUID: " + scriptId);
+            throw new InedoSqlException($"Invalid script GUID: {scriptId}");
 
-        using var db = CreateConnection(connectionString);
         var state = db.GetState();
         if (!state.IsInitialized)
             throw new InedoSqlException("Database has not been initialized.");
@@ -229,9 +222,8 @@ public static class ConsoleHost
         db.ResolveError(guid, comment);
         return 0;
     }
-    private static int ResolveAllErrors(string connectionString, string comment)
+    private static int ResolveAllErrors(DatabaseConnection db, string comment)
     {
-        using var db = CreateConnection(connectionString);
         var state = db.GetState();
         if (!state.IsInitialized)
             throw new InedoSqlException("Database has not been initialized.");
@@ -239,9 +231,8 @@ public static class ConsoleHost
         db.ResolveAllErrors(comment);
         return 0;
     }
-    private static int StrikeStruckTables(string connectionString)
+    private static int StrikeStruckTables(DatabaseConnection db)
     {
-        using var db = CreateConnection(connectionString);
         var state = db.GetState();
         if (!state.IsInitialized)
             throw new InedoSqlException("Database has not been initialized.");
@@ -271,9 +262,20 @@ public static class ConsoleHost
             ?? throw new InedoSqlException("Connection string is required. Argument --connection-string=<value> is missing and inedosql_cs environment variable is not set.");
     }
 
-    private static SqlServerDatabaseConnection CreateConnection(string connectionString)
+    private static DatabaseConnection CreateConnection(ArgList args)
     {
-        var connection = new SqlServerDatabaseConnection(InedoSqlUtil.EnsureRequireEncryptionDefaultsToFalse(connectionString));
+        var connectionString = GetConnectionString(args);
+
+        return args.Named.GetValueOrDefault("platform") switch
+        {
+            "pgsql" => CreateConnection<PgSqlDatabaseConnection>(connectionString),
+            "mssql" or null => CreateConnection<SqlServerDatabaseConnection>(connectionString),
+            _ => throw new InedoSqlException("Invalid database platform: must be pgsql or mssql")
+        };
+    }
+    private static TConnection CreateConnection<TConnection>(string connectionString) where TConnection : DatabaseConnection, IDatabaseConnection<TConnection>
+    {
+        var connection = TConnection.Create(connectionString);
         connection.LogInformationMessage += (s, e) => Console.WriteLine(e.Message);
         connection.LogErrorMessage += (s, e) => Console.Error.WriteLine(e.Message);
         return connection;

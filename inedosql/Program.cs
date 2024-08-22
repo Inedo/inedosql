@@ -1,6 +1,4 @@
-﻿using System.Threading.Tasks;
-
-namespace Inedo.DbUpdater;
+﻿namespace Inedo.DbUpdater;
 
 public static class Program
 {

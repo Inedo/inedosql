@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Inedo.DbUpdater;
+﻿namespace Inedo.DbUpdater;
 
 /// <summary>
 /// Uniquely identifies a change script.

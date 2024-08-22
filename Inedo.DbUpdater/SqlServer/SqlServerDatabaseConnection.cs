@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Linq;
+﻿using System.Data;
 using System.Text;
 using Microsoft.Data.SqlClient;
 
@@ -11,34 +8,21 @@ namespace Inedo.DbUpdater.SqlServer;
 /// Represents a connection to a SQL Server database.
 /// </summary>
 /// <param name="connectionString">SQL Server connection string.</param>
-public sealed class SqlServerDatabaseConnection(string connectionString) : IDisposable
+public sealed class SqlServerDatabaseConnection(string connectionString) : DatabaseConnection, IDatabaseConnection<SqlServerDatabaseConnection>
 {
     private SqlConnection? connection;
     private SqlCommand? command;
     private bool disposed;
 
     /// <summary>
-    /// Raised when an informational message is logged.
-    /// </summary>
-    public event EventHandler<MessageLoggedEventArgs>? LogInformationMessage;
-    /// <summary>
-    /// Raised when an error message is logged.
-    /// </summary>
-    public event EventHandler<MessageLoggedEventArgs>? LogErrorMessage;
-
-    /// <summary>
     /// Gets the SQL connection string.
     /// </summary>
     public string ConnectionString { get; } = connectionString;
-    /// <summary>
-    /// Gets a value indicating whether an error has been logged.
-    /// </summary>
-    public bool ErrorLogged { get; private set; }
 
     /// <summary>
     /// Writes metadata tables to the database if necessary.
     /// </summary>
-    public void InitializeDatabase()
+    public override void InitializeDatabase()
     {
         using var transaction = this.GetConnection().BeginTransaction();
         
@@ -55,7 +39,7 @@ public sealed class SqlServerDatabaseConnection(string connectionString) : IDisp
     /// </summary>
     /// <param name="canoncialGuids">Legacy ID mapping table.</param>
     /// <exception cref="InvalidOperationException">Database has not been initialized or has already been upgraded.</exception>
-    public void UpgradeSchema(IDictionary<int, Guid> canoncialGuids)
+    public override void UpgradeSchema(IReadOnlyDictionary<int, Guid> canoncialGuids)
     {
         var state = this.GetState();
         if (state.ChangeScripterVersion == 0)
@@ -109,7 +93,7 @@ public sealed class SqlServerDatabaseConnection(string connectionString) : IDisp
     /// Returns the current state of change scripts in the database.
     /// </summary>
     /// <returns>Current state of change scripts in the database.</returns>
-    public ChangeScriptState GetState()
+    public override ChangeScriptState GetState()
     {
         int version = this.GetChangeScriptVersion();
 
@@ -186,7 +170,7 @@ public sealed class SqlServerDatabaseConnection(string connectionString) : IDisp
     /// </summary>
     /// <param name="scriptId">Unique ID of the script.</param>
     /// <param name="comment">Resolution comment.</param>
-    public void ResolveError(Guid scriptId, string comment)
+    public override void ResolveError(Guid scriptId, string comment)
     {
         this.ExecuteNonQuery(
             Scripts.ResolveError,
@@ -199,7 +183,7 @@ public sealed class SqlServerDatabaseConnection(string connectionString) : IDisp
     /// Marks all errors as resolved.
     /// </summary>
     /// <param name="comment">Resolution comment.</param>
-    public void ResolveAllErrors(string comment)
+    public override void ResolveAllErrors(string comment)
     {
         this.ExecuteNonQuery(
             Scripts.ResolveAllErrors,
@@ -211,7 +195,7 @@ public sealed class SqlServerDatabaseConnection(string connectionString) : IDisp
     /// <summary>
     /// Drops all tables that have been marked as struck.
     /// </summary>
-    public void StrikeStruckTables()
+    public override void StrikeStruckTables()
     {
         var struckTables = this.ExecuteTable(Scripts.GetStruckTables, r => r.GetString(0));
         if (struckTables.Count > 0)
@@ -230,7 +214,7 @@ public sealed class SqlServerDatabaseConnection(string connectionString) : IDisp
     /// <param name="scripts">Scripts to execute.</param>
     /// <param name="state">Current state.</param>
     /// <returns>True if all scripts were successful; otherwise false.</returns>
-    public bool ExecuteScripts(IEnumerable<Script> scripts, ChangeScriptState state)
+    public override bool ExecuteScripts(IEnumerable<Script> scripts, ChangeScriptState state)
     {
         var lookup = state.Scripts.Where(s => s.Id?.Guid.HasValue == true).ToDictionary(s => s.Id.Guid.GetValueOrDefault());
 
@@ -252,9 +236,7 @@ public sealed class SqlServerDatabaseConnection(string connectionString) : IDisp
     }
 
     /// <inheritdoc/>
-    public void Dispose() => this.Dispose(true);
-
-    private void Dispose(bool disposing)
+    protected override void Dispose(bool disposing)
     {
         if (disposing && !this.disposed)
         {
@@ -262,13 +244,6 @@ public sealed class SqlServerDatabaseConnection(string connectionString) : IDisp
             this.connection?.Dispose();
             this.disposed = true;
         }
-    }
-
-    private void LogInformation(string s) => this.LogInformationMessage?.Invoke(this, new MessageLoggedEventArgs(s));
-    private void LogError(string s)
-    {
-        this.ErrorLogged = true;
-        this.LogErrorMessage?.Invoke(this, new MessageLoggedEventArgs(s));
     }
 
     private bool ExecuteTrackedScript(Script script, Dictionary<Guid, ChangeScriptExecutionRecord> currentState)
@@ -444,4 +419,6 @@ public sealed class SqlServerDatabaseConnection(string connectionString) : IDisp
 
         return 0;
     }
+
+    static SqlServerDatabaseConnection IDatabaseConnection<SqlServerDatabaseConnection>.Create(string connectionString) => new(InedoSqlUtil.EnsureRequireEncryptionDefaultsToFalse(connectionString));
 }

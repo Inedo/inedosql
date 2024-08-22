@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Inedo.DbUpdater.SqlServer;
+namespace Inedo.DbUpdater;
 
 /// <summary>
 /// Contains a logged message.

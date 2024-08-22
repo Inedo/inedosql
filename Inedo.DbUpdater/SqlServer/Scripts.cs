@@ -1,5 +1,4 @@
-﻿using System;
-using System.Text;
+﻿using System.Text;
 
 namespace Inedo.DbUpdater.SqlServer;
 
@@ -15,7 +14,7 @@ internal static class Scripts
     public static string ResolveAllErrors => Encoding.UTF8.GetString(ResolveAllErrorsBytes);
 
     private static ReadOnlySpan<byte> GetStruckTablesBytes =>
-    """
+        """
         IF OBJECT_ID('[__UninclusedObjects]') IS NOT NULL
             SELECT [Object_Name]
               FROM [__UninclusedObjects]
