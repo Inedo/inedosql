@@ -14,18 +14,21 @@
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageTags>inedo sql changescripts</PackageTags>
     <PackageProjectUrl>https://github.com/Inedo/inedosql</PackageProjectUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
     <RepositoryUrl>https://github.com/Inedo/inedosql.git</RepositoryUrl>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
     <FileVersion>1.0.0.0</FileVersion>
     <Version>0.0.0</Version>
     <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.0" />
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.2" />
   </ItemGroup>
 	<ItemGroup>
 	  <EmbeddedResource Include="SqlServer\Scripts\*.sql" />
-	</ItemGroup>
+    <None Include="..\README.md" Link="README.md" Pack="true" PackagePath="/" />
+  </ItemGroup>
 	<ItemGroup>
 	  <ProjectReference Include="..\Inedo.DbUpdater\Inedo.DbUpdater.csproj" />
 	</ItemGroup>

@@ -39,7 +39,7 @@ public sealed class SqlServerDatabaseConnection(string connectionString) : Datab
     /// </summary>
     /// <param name="canoncialGuids">Legacy ID mapping table.</param>
     /// <exception cref="InvalidOperationException">Database has not been initialized or has already been upgraded.</exception>
-    public override void UpgradeSchema(IReadOnlyDictionary<int, Guid> canoncialGuids)
+    public override void UpgradeSchema(IReadOnlyDictionary<int, Guid>? canoncialGuids)
     {
         var state = this.GetState();
         if (state.ChangeScripterVersion == 0)
@@ -170,25 +170,25 @@ public sealed class SqlServerDatabaseConnection(string connectionString) : Datab
     /// </summary>
     /// <param name="scriptId">Unique ID of the script.</param>
     /// <param name="comment">Resolution comment.</param>
-    public override void ResolveError(Guid scriptId, string comment)
+    public override void ResolveError(Guid scriptId, string? comment)
     {
         this.ExecuteNonQuery(
             Scripts.ResolveError,
             null,
             new SqlParameter("Script_Guid", scriptId),
-            new SqlParameter("ErrorResolved_Text", SqlDbType.NVarChar, -1) { Value = (object)comment ?? DBNull.Value }
+            new SqlParameter("ErrorResolved_Text", SqlDbType.NVarChar, -1) { Value = (object?)comment ?? DBNull.Value }
         );
     }
     /// <summary>
     /// Marks all errors as resolved.
     /// </summary>
     /// <param name="comment">Resolution comment.</param>
-    public override void ResolveAllErrors(string comment)
+    public override void ResolveAllErrors(string? comment)
     {
         this.ExecuteNonQuery(
             Scripts.ResolveAllErrors,
             null,
-            new SqlParameter("ErrorResolved_Text", SqlDbType.NVarChar, -1) { Value = (object)comment ?? DBNull.Value }
+            new SqlParameter("ErrorResolved_Text", SqlDbType.NVarChar, -1) { Value = (object?)comment ?? DBNull.Value }
         );
     }
 

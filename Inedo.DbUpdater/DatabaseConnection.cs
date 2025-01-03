@@ -32,7 +32,7 @@ public abstract class DatabaseConnection : IDisposable
     /// </summary>
     /// <param name="canoncialGuids">Legacy ID mapping table.</param>
     /// <exception cref="InvalidOperationException">Database has not been initialized or has already been upgraded.</exception>
-    public abstract void UpgradeSchema(IReadOnlyDictionary<int, Guid> canoncialGuids);
+    public abstract void UpgradeSchema(IReadOnlyDictionary<int, Guid>? canoncialGuids);
     /// <summary>
     /// Returns the current state of change scripts in the database.
     /// </summary>
@@ -43,12 +43,12 @@ public abstract class DatabaseConnection : IDisposable
     /// </summary>
     /// <param name="scriptId">Unique ID of the script.</param>
     /// <param name="comment">Resolution comment.</param>
-    public abstract void ResolveError(Guid scriptId, string comment);
+    public abstract void ResolveError(Guid scriptId, string? comment);
     /// <summary>
     /// Marks all errors as resolved.
     /// </summary>
     /// <param name="comment">Resolution comment.</param>
-    public abstract void ResolveAllErrors(string comment);
+    public abstract void ResolveAllErrors(string? comment);
     /// <summary>
     /// Drops all tables that have been marked as struck.
     /// </summary>

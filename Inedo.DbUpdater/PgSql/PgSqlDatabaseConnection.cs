@@ -86,7 +86,7 @@ public sealed class PgSqlDatabaseConnection(string connectionString) : DatabaseC
     }
 
     /// <inheritdoc/>
-    public override void ResolveAllErrors(string comment)
+    public override void ResolveAllErrors(string? comment)
     {
         this.ExecuteNonQuery(
             Scripts.ResolveAllErrors,
@@ -96,7 +96,7 @@ public sealed class PgSqlDatabaseConnection(string connectionString) : DatabaseC
     }
 
     /// <inheritdoc/>
-    public override void ResolveError(Guid scriptId, string comment)
+    public override void ResolveError(Guid scriptId, string? comment)
     {
         this.ExecuteNonQuery(
             Scripts.ResolveError,
@@ -121,7 +121,7 @@ public sealed class PgSqlDatabaseConnection(string connectionString) : DatabaseC
     }
 
     /// <inheritdoc/>
-    public override void UpgradeSchema(IReadOnlyDictionary<int, Guid> canoncialGuids) => throw new InvalidOperationException("The database has already been upgraded.");
+    public override void UpgradeSchema(IReadOnlyDictionary<int, Guid>? canoncialGuids) => throw new InvalidOperationException("The database has already been upgraded.");
 
     /// <inheritdoc/>
     protected override void Dispose(bool disposing)

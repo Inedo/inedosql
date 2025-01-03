@@ -42,10 +42,10 @@ public static class ConsoleHost
 
         return args.Command switch
         {
-            "update" => Update(args.TryGetPositional(0), db, args.Named.ContainsKey("force")),
+            "update" => Update(args.TryGetPositional(0)!, db, args.Named.ContainsKey("force")),
             "errors" => ListErrors(args.Named.ContainsKey("all"), db),
-            "error" => ShowErrorDetails(args.TryGetPositional(0), db, false),
-            "script" => ShowErrorDetails(args.TryGetPositional(0), db, true),
+            "error" => ShowErrorDetails(args.TryGetPositional(0)!, db, false),
+            "script" => ShowErrorDetails(args.TryGetPositional(0)!, db, true),
             "resolve-error" => resolveErrors(),
             "strike-struck" => StrikeStruckTables(db),
             _ => throw new InedoSqlException("Invalid command: " + args.Command, true)
@@ -201,7 +201,7 @@ public static class ConsoleHost
 
         return 0;
     }
-    private static int ResolveError(string scriptId, DatabaseConnection db, string comment)
+    private static int ResolveError(string scriptId, DatabaseConnection db, string? comment)
     {
         if (!Guid.TryParse(scriptId, out var guid))
             throw new InedoSqlException($"Invalid script GUID: {scriptId}");
@@ -222,7 +222,7 @@ public static class ConsoleHost
         db.ResolveError(guid, comment);
         return 0;
     }
-    private static int ResolveAllErrors(DatabaseConnection db, string comment)
+    private static int ResolveAllErrors(DatabaseConnection db, string? comment)
     {
         var state = db.GetState();
         if (!state.IsInitialized)

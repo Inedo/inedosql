@@ -8,7 +8,8 @@
 		<Product>InedoSql</Product>
 		<Copyright>Copyright © Inedo 2024</Copyright>
 		<Description>SQL Server database schema and script management tool.</Description>
-		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageProjectUrl>https://github.com/Inedo/inedosql</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/Inedo/inedosql.git</RepositoryUrl>
 		<PackageTags>inedo sql changescripts</PackageTags>
@@ -20,9 +21,16 @@
 		<AssemblyOriginatorKeyFile>Inedo.DbUpdater.snk</AssemblyOriginatorKeyFile>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-	</PropertyGroup>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+  </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.0" />
-    <PackageReference Include="Npgsql" Version="8.0.3" />
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="5.1.5" />
+    <PackageReference Include="Npgsql" Version="9.0.2" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\README.md" Link="README.md" Pack="true" PackagePath="/" />
   </ItemGroup>
 </Project>

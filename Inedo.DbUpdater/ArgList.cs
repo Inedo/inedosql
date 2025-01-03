@@ -27,11 +27,11 @@ internal sealed partial class ArgList
         this.Named = namedArgs;
     }
 
-    public string Command { get; }
+    public string? Command { get; }
     public IReadOnlyList<string> Positional { get; }
     public IReadOnlyDictionary<string, string> Named { get; }
 
-    public string TryGetPositional(int index) => index >= 0 && index < this.Positional.Count ? this.Positional[index] : null;
+    public string? TryGetPositional(int index) => index >= 0 && index < this.Positional.Count ? this.Positional[index] : null;
 
     [GeneratedRegex(@"^--?(?<1>[a-zA-Z0-9]+[a-zA-Z0-9\-]*)(=(?<2>.*))?$", RegexOptions.ExplicitCapture)]
     private static partial Regex OptionRegex();
