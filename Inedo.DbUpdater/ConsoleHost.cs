@@ -42,7 +42,7 @@ public static class ConsoleHost
 
         return args.Command switch
         {
-            "update" => Update(args.TryGetPositional(0)!, db, args.Named.ContainsKey("force")),
+            "update" => Update(args.TryGetPositional(0)!, db, args.Named.ContainsKey("force"), args.Named.GetValueOrDefault("ignore")?.Split(';', StringSplitOptions.RemoveEmptyEntries)),
             "errors" => ListErrors(args.Named.ContainsKey("all"), db),
             "error" => ShowErrorDetails(args.TryGetPositional(0)!, db, false),
             "script" => ShowErrorDetails(args.TryGetPositional(0)!, db, true),
@@ -66,24 +66,26 @@ public static class ConsoleHost
         }
     }
 
-    private static int Update(string scriptPath, DatabaseConnection db, bool force)
+    private static int Update(string scriptPath, DatabaseConnection db, bool force, string[]? ignoreScripts)
     {
         ArgumentException.ThrowIfNullOrEmpty(scriptPath);
 
-        IReadOnlyCollection<Script> sqlScripts;
+        var uninclusedScripts = (ignoreScripts ?? []).Select(s => s.Replace('\\', '/')).ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        List<Script> sqlScripts;
 
         if (scriptPath.EndsWith(".zip", StringComparison.OrdinalIgnoreCase) && File.Exists(scriptPath))
         {
             using var zip = new ZipArchive(File.OpenRead(scriptPath), ZipArchiveMode.Read);
             var zipScripts = Script.GetScriptZipEntries(zip);
             zipScripts.Sort();
-            sqlScripts = zipScripts.AsReadOnly();
+            sqlScripts = zipScripts;
         }
         else if (Directory.Exists(scriptPath))
         {
             var fileScripts = Script.GetScriptFiles(scriptPath);
             fileScripts.Sort();
-            sqlScripts = fileScripts.AsReadOnly();
+            sqlScripts = fileScripts;
         }
         else
         {
@@ -147,6 +149,9 @@ public static class ConsoleHost
             Console.Error.WriteLine("Use the \"errors\" command to view unresolved errors, or use the --force argument to run anyway.");
             return -1;
         }
+
+        if (uninclusedScripts.Count > 0)
+            sqlScripts.RemoveAll(s => uninclusedScripts.Contains(s.FileName.Replace('\\', '/')));
 
         if (!db.ExecuteScripts(sqlScripts, state))
             return -1;
