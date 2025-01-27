@@ -9,6 +9,8 @@ namespace Inedo.DbUpdater;
 /// </summary>
 public static class ConsoleHost
 {
+    private static readonly object ConsoleLock = new();
+
     /// <summary>
     /// Runs inedosql as a console application.
     /// </summary>
@@ -22,7 +24,7 @@ public static class ConsoleHost
         }
         catch (InedoSqlException ex)
         {
-            Console.Error.WriteLine(ex.Message);
+            WriteLine(Console.Error, ex.Message, ConsoleColor.Red);
             if (ex.WriteUsage)
                 Usage();
 
@@ -89,7 +91,7 @@ public static class ConsoleHost
         }
         else
         {
-            Console.Error.WriteLine($"Script path \"{scriptPath}\" not found.");
+            WriteLine(Console.Error, $"Script path \"{scriptPath}\" not found.", ConsoleColor.Red);
             return -1;
         }
 
@@ -145,8 +147,8 @@ public static class ConsoleHost
 
         if (!force && state.Scripts.Any(s => !s.SuccessfullyExecuted && !s.ErrorResolvedDate.HasValue))
         {
-            Console.Error.WriteLine("Scripts not executed; at least one script has unresolved errors.");
-            Console.Error.WriteLine("Use the \"errors\" command to view unresolved errors, or use the --force argument to run anyway.");
+            WriteLine(Console.Error, "Scripts not executed; at least one script has unresolved errors.", ConsoleColor.Red);
+            WriteLine(Console.Error, "Use the \"errors\" command to view unresolved errors, or use the --force argument to run anyway.", ConsoleColor.Red);
             return -1;
         }
 
@@ -154,7 +156,10 @@ public static class ConsoleHost
             sqlScripts.RemoveAll(s => uninclusedScripts.Contains(s.FileName.Replace('\\', '/')));
 
         if (!db.ExecuteScripts(sqlScripts, state))
+        {
+            WriteLine(Console.Error, "At least one script reported an error.", ConsoleColor.Red);
             return -1;
+        }
 
         if (db.ErrorLogged)
             return -1;
@@ -281,8 +286,26 @@ public static class ConsoleHost
     private static TConnection CreateConnection<TConnection>(string connectionString) where TConnection : DatabaseConnection, IDatabaseConnection<TConnection>
     {
         var connection = TConnection.Create(connectionString);
-        connection.LogInformationMessage += (s, e) => Console.WriteLine(e.Message);
-        connection.LogErrorMessage += (s, e) => Console.Error.WriteLine(e.Message);
+        connection.LogInformationMessage += (s, e) => WriteLine(Console.Out, e.Message);
+        connection.LogErrorMessage += (s, e) => WriteLine(Console.Error, e.Message, ConsoleColor.Red);
         return connection;
+    }
+    private static void WriteLine(TextWriter writer, string message, ConsoleColor? color = null)
+    {
+        lock (ConsoleLock)
+        {
+            ConsoleColor originalColor = default;
+
+            if (color.HasValue)
+            {
+                originalColor = Console.ForegroundColor;
+                Console.ForegroundColor = color.GetValueOrDefault();
+            }
+
+            writer.WriteLine(message);
+
+            if (color.HasValue)
+                Console.ForegroundColor = originalColor;
+        }
     }
 }
